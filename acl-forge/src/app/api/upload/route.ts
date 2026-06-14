@@ -6,9 +6,7 @@ import { addVideoProcessingJob } from '@/lib/queue'
 import { v4 as uuidv4 } from 'uuid'
 import { buildS3Key } from '@/lib/s3'
 
-// TUS upload metadata endpoint
-// Client uses tus-js-client; this endpoint handles upload-complete notifications
-// For full TUS server implementation, use @tus/server or tus-node-server as a separate Express server
+const hasRedis = !!process.env.REDIS_URL
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -40,7 +38,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ clipId: clip.id, s3Key }, { status: 201 })
 }
 
-// Called when upload is complete — triggers FFmpeg processing
+// Called when upload finishes — queues FFmpeg if Redis available, else marks READY
 export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -57,18 +55,26 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const job = await addVideoProcessingJob({
-    clipId: clip.id,
-    projectId: clip.projectId,
-    userId,
-    s3Key: clip.s3Key,
-    mimeType: clip.mimeType,
-  })
-
-  await prisma.clip.update({
-    where: { id: clipId },
-    data: { uploadStatus: 'PROCESSING', uploadId: job.id },
-  })
-
-  return NextResponse.json({ jobId: job.id })
+  if (hasRedis) {
+    // Full path: FFmpeg worker processes the video
+    const job = await addVideoProcessingJob({
+      clipId: clip.id,
+      projectId: clip.projectId,
+      userId,
+      s3Key: clip.s3Key,
+      mimeType: clip.mimeType,
+    })
+    await prisma.clip.update({
+      where: { id: clipId },
+      data: { uploadStatus: 'PROCESSING', uploadId: job?.id },
+    })
+    return NextResponse.json({ jobId: job?.id, mode: 'queued' })
+  } else {
+    // No-worker path: mark READY immediately (no thumbnail/waveform)
+    await prisma.clip.update({
+      where: { id: clipId },
+      data: { uploadStatus: 'READY' },
+    })
+    return NextResponse.json({ mode: 'direct' })
+  }
 }

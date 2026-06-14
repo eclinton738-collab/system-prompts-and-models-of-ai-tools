@@ -1,17 +1,4 @@
-import { Queue, Worker, Job } from 'bullmq'
-
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
-const url = new URL(redisUrl)
-
-const connection = {
-  host: url.hostname,
-  port: parseInt(url.port) || 6379,
-  password: url.password || undefined,
-  maxRetriesPerRequest: null as null,
-}
-
-export const videoProcessingQueue = new Queue('video-processing', { connection })
-export const exportQueue = new Queue('export', { connection })
+import { Queue, Job } from 'bullmq'
 
 export interface VideoProcessingJob {
   clipId: string
@@ -29,8 +16,39 @@ export interface ExportJob {
   resolution: string
 }
 
-export async function addVideoProcessingJob(data: VideoProcessingJob): Promise<Job> {
-  return videoProcessingQueue.add('process-video', data, {
+// Queues are optional — if no Redis, jobs are tracked in-DB only
+let videoProcessingQueue: Queue | null = null
+let exportQueue: Queue | null = null
+
+function getConnection() {
+  const redisUrl = process.env.REDIS_URL
+  if (!redisUrl) return null
+  try {
+    const url = new URL(redisUrl)
+    return {
+      host: url.hostname,
+      port: parseInt(url.port) || 6379,
+      password: url.password || undefined,
+      maxRetriesPerRequest: null as null,
+    }
+  } catch {
+    return null
+  }
+}
+
+function getQueues() {
+  if (videoProcessingQueue) return { videoProcessingQueue, exportQueue: exportQueue! }
+  const conn = getConnection()
+  if (!conn) return null
+  videoProcessingQueue = new Queue('video-processing', { connection: conn })
+  exportQueue = new Queue('export', { connection: conn })
+  return { videoProcessingQueue, exportQueue }
+}
+
+export async function addVideoProcessingJob(data: VideoProcessingJob): Promise<Job | null> {
+  const queues = getQueues()
+  if (!queues) return null
+  return queues.videoProcessingQueue.add('process-video', data, {
     attempts: 3,
     backoff: { type: 'exponential', delay: 5000 },
     removeOnComplete: 100,
@@ -38,8 +56,10 @@ export async function addVideoProcessingJob(data: VideoProcessingJob): Promise<J
   })
 }
 
-export async function addExportJob(data: ExportJob): Promise<Job> {
-  return exportQueue.add('export-video', data, {
+export async function addExportJob(data: ExportJob): Promise<Job | null> {
+  const queues = getQueues()
+  if (!queues) return null
+  return queues.exportQueue.add('export-video', data, {
     attempts: 2,
     backoff: { type: 'fixed', delay: 10000 },
     removeOnComplete: 50,
@@ -48,13 +68,13 @@ export async function addExportJob(data: ExportJob): Promise<Job> {
 }
 
 export async function getJobStatus(queueName: string, jobId: string) {
-  const queue = queueName === 'video-processing' ? videoProcessingQueue : exportQueue
+  const queues = getQueues()
+  if (!queues) return null
+  const queue = queueName === 'video-processing' ? queues.videoProcessingQueue : queues.exportQueue
   const job = await queue.getJob(jobId)
   if (!job) return null
-
   const state = await job.getState()
   const progress = job.progress as number
-
   return {
     id: jobId,
     status: state,
@@ -63,5 +83,3 @@ export async function getJobStatus(queueName: string, jobId: string) {
     error: job.failedReason,
   }
 }
-
-export type { connection }
