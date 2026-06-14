@@ -1,0 +1,331 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-bebas: 'Bebas Neue', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-dm-mono: 'DM Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: #0A0A0A;
+  color: #F0EDE8;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A2A2A;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C8321E;
+}
+
+/* Selection */
+::selection {
+  background: rgba(200, 50, 30, 0.3);
+  color: #F0EDE8;
+}
+
+/* Scan lines overlay */
+.scan-lines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Vignette overlay */
+.vignette::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+  z-index: 11;
+}
+
+/* Timeline clip */
+.timeline-clip {
+  background: linear-gradient(135deg, #1E1E1E 0%, #2A2A2A 100%);
+  border: 1px solid #3A3A3A;
+  border-radius: 2px;
+  cursor: grab;
+  position: absolute;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+
+.timeline-clip:active {
+  cursor: grabbing;
+}
+
+.timeline-clip.selected {
+  border-color: #C8321E;
+  box-shadow: 0 0 0 1px #C8321E;
+}
+
+/* Trim handles */
+.trim-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: #C8321E;
+  cursor: col-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.timeline-clip:hover .trim-handle {
+  opacity: 1;
+}
+
+.trim-handle-left {
+  left: 0;
+  border-radius: 2px 0 0 2px;
+}
+
+.trim-handle-right {
+  right: 0;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Video track gradient */
+.track-video {
+  background: linear-gradient(90deg, rgba(200, 50, 30, 0.15) 0%, transparent 100%);
+}
+
+.track-audio {
+  background: linear-gradient(90deg, rgba(184, 150, 46, 0.15) 0%, transparent 100%);
+}
+
+.track-vo {
+  background: linear-gradient(90deg, rgba(100, 150, 200, 0.15) 0%, transparent 100%);
+}
+
+.track-fx {
+  background: linear-gradient(90deg, rgba(150, 100, 200, 0.15) 0%, transparent 100%);
+}
+
+/* Upload progress ring */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.35s;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Style card */
+.style-card {
+  background: #141414;
+  border: 1px solid #2A2A2A;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.style-card:hover {
+  border-color: #C8321E;
+  background: rgba(200, 50, 30, 0.05);
+}
+
+.style-card.active {
+  border-color: #C8321E;
+  background: rgba(200, 50, 30, 0.1);
+  box-shadow: 0 0 20px rgba(200, 50, 30, 0.2);
+}
+
+/* AI feature toggle */
+.ai-toggle {
+  background: #1A1A1A;
+  border: 1px solid #2A2A2A;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ai-toggle.active {
+  border-color: #B8962E;
+  background: rgba(184, 150, 46, 0.1);
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #1A1A1A 25%, #242424 50%, #1A1A1A 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Forge button */
+.btn-forge {
+  background: #C8321E;
+  color: #F0EDE8;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.1em;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-forge:hover {
+  background: #E04030;
+  transform: translateY(-1px);
+}
+
+.btn-forge:active {
+  background: #A02818;
+  transform: translateY(0);
+}
+
+.btn-forge-gold {
+  background: #B8962E;
+}
+
+.btn-forge-gold:hover {
+  background: #D4AE40;
+}
+
+/* Modal */
+.forge-modal {
+  background: #141414;
+  border: 1px solid #2A2A2A;
+  border-left: 3px solid #C8321E;
+  border-radius: 4px;
+}
+
+.forge-modal-gold {
+  border-left-color: #B8962E;
+}
+
+/* Input */
+.forge-input {
+  background: #1A1A1A;
+  border: 1px solid #2A2A2A;
+  border-radius: 2px;
+  color: #F0EDE8;
+  font-family: 'Inter', sans-serif;
+  transition: border-color 0.15s;
+}
+
+.forge-input:focus {
+  outline: none;
+  border-color: #C8321E;
+}
+
+/* Timecode */
+.timecode {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: #C8C0B0;
+  letter-spacing: 0.05em;
+}
+
+/* Playhead */
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #C8321E;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.playhead::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid #C8321E;
+}
+
+/* Waveform */
+.waveform-bar {
+  background: rgba(184, 150, 46, 0.6);
+  border-radius: 1px;
+  transition: height 0.1s;
+}
+
+/* Status badge */
+.status-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.status-ready { background: rgba(50, 200, 100, 0.2); color: #50C864; }
+.status-processing { background: rgba(184, 150, 46, 0.2); color: #B8962E; }
+.status-uploading { background: rgba(100, 150, 200, 0.2); color: #6496C8; }
+.status-failed { background: rgba(200, 50, 30, 0.2); color: #C8321E; }
+.status-pending { background: rgba(100, 100, 100, 0.2); color: #808080; }
+
+/* AI streaming text */
+.ai-stream-text {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #B8962E;
+  white-space: pre-wrap;
+}
+
+/* Ruler tick */
+.ruler-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  background: #2A2A2A;
+}
+
+.ruler-tick.major {
+  background: #3A3A3A;
+  height: 12px;
+}
+
+.ruler-tick.minor {
+  height: 6px;
+}
