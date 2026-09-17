@@ -1,0 +1,234 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   ACL EVENT OS — Design tokens
+   Black canvas, ACL red actions, gold premium, green success, blue info,
+   amber warning, red security failure.
+   ========================================================================== */
+
+@theme {
+  --color-void: #050507;
+  --color-canvas: #08090C;
+  --color-surface: #0D0F13;
+  --color-surface-2: #12151B;
+  --color-surface-3: #191D25;
+  --color-hairline: #23272F;
+  --color-hairline-strong: #333944;
+
+  --color-acl-red: #E11021;
+  --color-acl-red-bright: #FF2E3C;
+  --color-acl-red-deep: #8E0A15;
+
+  --color-gold: #E4B13E;
+  --color-gold-bright: #F7D278;
+  --color-gold-deep: #7A5C13;
+
+  --color-ok: #17C26B;
+  --color-ok-deep: #0B5F35;
+  --color-info: #3396FF;
+  --color-info-deep: #0F3F73;
+  --color-warn: #F5A524;
+  --color-warn-deep: #6B4708;
+  --color-danger: #FF3B3B;
+  --color-danger-deep: #6E0F0F;
+
+  --color-ink: #F4F6F8;
+  --color-ink-2: #AEB6C2;
+  --color-ink-3: #6E7683;
+  --color-ink-4: #474E59;
+
+  --font-display: var(--font-display), "Arial Narrow", system-ui, sans-serif;
+  --font-sans: var(--font-sans), system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius-panel: 4px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+    min-width: 0;
+  }
+
+  html {
+    background: var(--color-void);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "tnum";
+    overflow-x: hidden;
+  }
+
+  /* Operational software: tight, squared, industrial. */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-acl-red-bright);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-acl-red);
+    color: #fff;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-canvas);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-3);
+    border: 2px solid var(--color-canvas);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-hairline-strong);
+  }
+
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Metal / glass surfaces — the core panel language of the app. */
+  .acl-panel {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 55%),
+      var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-panel);
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+      0 18px 40px -24px rgba(0, 0, 0, 0.9);
+  }
+
+  .acl-panel-flat {
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-panel);
+  }
+
+  .acl-inset {
+    background: linear-gradient(180deg, #06070A 0%, #0B0D11 100%);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-panel);
+    box-shadow: 0 2px 14px -6px rgba(0, 0, 0, 0.9) inset;
+  }
+
+  /* Thin top accent used on KPI / status panels. */
+  .acl-accent-top::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-acl-red) 0%, rgba(225, 16, 33, 0) 70%);
+  }
+
+  .acl-label {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+
+  .acl-stat {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .acl-hatch {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.05) 0px,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px,
+      transparent 7px
+    );
+  }
+
+  .acl-grid-bg {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    background-size: 52px 52px;
+  }
+
+  .acl-scan-line {
+    animation: acl-scan 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .acl-skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-2) 25%,
+      var(--color-surface-3) 37%,
+      var(--color-surface-2) 63%
+    );
+    background-size: 400% 100%;
+    animation: acl-shimmer 1.4s ease infinite;
+  }
+}
+
+@keyframes acl-scan {
+  0% { transform: translateY(0%); opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(1000%); opacity: 0; }
+}
+
+@keyframes acl-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+@keyframes acl-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(23, 194, 107, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(23, 194, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(23, 194, 107, 0); }
+}
+
+.acl-live-dot {
+  animation: acl-pulse-ring 2s infinite;
+}
+
+@keyframes acl-flash-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.acl-flash-in {
+  animation: acl-flash-in 0.22s ease-out both;
+}
+
+@keyframes acl-slide-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.acl-slide-in {
+  animation: acl-slide-in 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,403 @@
+// ACL EVENT OS — PostgreSQL data model.
+//
+// The in-memory demo store in `src/lib/server/store.ts` implements exactly
+// these entities and relationships. Swapping to Postgres means replacing the
+// body of each store method with the equivalent Prisma call; see `checkIn`,
+// whose compare-and-set maps onto the conditional UPDATE documented below.
+//
+//   npx prisma migrate dev --name init
+//   npx prisma generate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  EVENT_MANAGER
+  FINANCE
+  CHECK_IN_STAFF
+  TICKET_AGENT
+  SECURITY
+}
+
+enum EventStatus {
+  DRAFT
+  ON_SALE
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum TicketTypeCode {
+  GENERAL
+  VIP
+  VVIP
+  RINGSIDE
+  EXECUTIVE
+  ROYAL
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  REFUNDED
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  USSD
+  POS_AGENT
+  CASH_OUTLET
+}
+
+enum SalesChannel {
+  WEBSITE
+  POS_AGENT
+  BANK_TRANSFER
+  USSD
+  CASH
+}
+
+enum CheckInResult {
+  GRANTED
+  REJECTED
+}
+
+enum RejectionReason {
+  TICKET_NOT_FOUND
+  PAYMENT_PENDING
+  PAYMENT_FAILED
+  TICKET_REFUNDED
+  WRONG_EVENT
+  TICKET_EXPIRED
+  ALREADY_USED
+  TICKET_SUSPENDED
+  TICKET_CANCELLED
+  INVALID_SIGNATURE
+  MALFORMED_PAYLOAD
+  EVENT_NOT_OPEN
+}
+
+enum SecurityEventKind {
+  DUPLICATE_SCAN
+  INVALID_TICKET
+  UNPAID_TICKET
+  REFUNDED_TICKET
+  WRONG_EVENT
+  FORGED_PAYLOAD
+  SUSPENDED_TICKET
+  VALID_CHECK_IN
+}
+
+enum SecuritySeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  INFO
+}
+
+enum AgentStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum NotificationKind {
+  TICKET_SOLD
+  PAYMENT_RECEIVED
+  SECURITY_ALERT
+  REFUND
+  CAPACITY_WARNING
+  SYSTEM
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  phone         String?
+  role          Role
+  active        Boolean        @default(true)
+  lastActiveAt  DateTime?
+  createdAt     DateTime       @default(now())
+  checkIns      CheckIn[]
+  securityEvent SecurityEvent[]
+
+  @@index([role])
+}
+
+model Event {
+  id                        String      @id @default(cuid())
+  name                      String
+  status                    EventStatus @default(DRAFT)
+  startsAt                  DateTime
+  venue                     String
+  location                  String
+  capacity                  Int
+  projectedRevenue          BigInt
+  currency                  String      @default("NGN")
+  refundPolicy              String      @db.Text
+  doorsOpenMinutesBefore    Int         @default(180)
+  entryClosesMinutesAfter   Int         @default(180)
+  singleUseTickets          Boolean     @default(true)
+  allowPendingPaymentOverride Boolean   @default(false)
+  refundWindowHours         Int         @default(72)
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
+
+  ticketTypes    TicketType[]
+  gates          Gate[]
+  tickets        Ticket[]
+  seats          Seat[]
+  tables         EventTable[]
+  checkIns       CheckIn[]
+  securityEvents SecurityEvent[]
+
+  @@index([status, startsAt])
+}
+
+model TicketType {
+  id              String         @id @default(cuid())
+  event           Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId         String
+  code            TicketTypeCode
+  name            String
+  /// Whole Naira. Money is never stored as a float.
+  price           Int
+  allocation      Int
+  seatsPerTicket  Int            @default(1)
+  idSegment       String
+  description     String?
+  premium         Boolean        @default(false)
+  tickets         Ticket[]
+
+  @@unique([eventId, code])
+}
+
+model Gate {
+  id           String           @id @default(cuid())
+  event        Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId      String
+  name         String
+  allowedTypes TicketTypeCode[]
+  active       Boolean          @default(true)
+  checkIns     CheckIn[]
+  securityEvents SecurityEvent[]
+
+  @@unique([eventId, name])
+}
+
+model Attendee {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String
+  email     String
+  createdAt DateTime  @default(now())
+  tickets   Ticket[]
+  payments  Payment[]
+
+  @@index([phone])
+  @@index([email])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  /// Human-facing transaction reference shown on receipts.
+  reference     String        @unique
+  attendee      Attendee      @relation(fields: [attendeeId], references: [id])
+  attendeeId    String
+  customerName  String
+  amount        Int
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  providerRef   String?
+  failureReason String?
+  agent         Agent?        @relation(fields: [agentId], references: [id])
+  agentId       String?
+  createdAt     DateTime      @default(now())
+  settledAt     DateTime?
+  refundedAt    DateTime?
+  tickets       Ticket[]
+
+  @@index([status, createdAt])
+  @@index([agentId])
+}
+
+model Ticket {
+  /// Human-readable, server-minted: ACL-VIP-000482. Never supplied by a client.
+  id             String       @id
+  event          Event        @relation(fields: [eventId], references: [id])
+  eventId        String
+  ticketType     TicketType   @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId   String
+  type           TicketTypeCode
+  attendee       Attendee     @relation(fields: [attendeeId], references: [id])
+  attendeeId     String
+  price          Int
+  status         TicketStatus @default(VALID)
+  payment        Payment      @relation(fields: [paymentId], references: [id])
+  paymentId      String
+  paymentStatus  PaymentStatus
+  channel        SalesChannel
+  agent          Agent?       @relation(fields: [agentId], references: [id])
+  agentId        String?
+  seat           Seat?        @relation(fields: [seatId], references: [id])
+  seatId         String?
+  table          EventTable?  @relation(fields: [tableId], references: [id])
+  tableId        String?
+  /// Per-ticket nonce mixed into the signed QR payload.
+  qrNonce        String
+  purchasedAt    DateTime     @default(now())
+  usedAt         DateTime?
+  usedGateId     String?
+  usedOperatorId String?
+  /// Optimistic-concurrency guard, bumped on every state transition.
+  version        Int          @default(1)
+
+  checkIns CheckIn[]
+
+  // The check-in transaction relies on this row being lockable:
+  //   SELECT ... FROM "Ticket" WHERE id = $1 FOR UPDATE
+  //   UPDATE "Ticket" SET status='USED', "usedAt"=now(), version=version+1
+  //     WHERE id = $1 AND status = 'VALID'
+  // A zero row count means another scanner won the race → duplicate.
+  @@index([eventId, status])
+  @@index([eventId, type])
+  @@index([attendeeId])
+  @@index([agentId])
+  @@index([purchasedAt])
+}
+
+model Seat {
+  id          String         @id @default(cuid())
+  event       Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  section     String
+  label       String
+  reservedFor String?
+  tickets     Ticket[]
+
+  @@unique([eventId, section, label])
+}
+
+model EventTable {
+  id            String         @id
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId       String
+  type          TicketTypeCode
+  label         String
+  capacity      Int
+  buyerName     String?
+  buyerPhone    String?
+  paymentStatus PaymentStatus?
+  reserved      Boolean        @default(false)
+  reservedNote  String?
+  tickets       Ticket[]
+  guests        TableGuest[]
+
+  @@index([eventId, type])
+}
+
+model TableGuest {
+  id          String     @id @default(cuid())
+  table       EventTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  tableId     String
+  name        String
+  checkedIn   Boolean    @default(false)
+  checkedInAt DateTime?
+
+  @@index([tableId])
+}
+
+model Agent {
+  id             String      @id
+  name           String
+  phone          String
+  location       String
+  commissionRate Decimal     @db.Decimal(5, 4)
+  status         AgentStatus @default(ACTIVE)
+  createdAt      DateTime    @default(now())
+  tickets        Ticket[]
+  payments       Payment[]
+
+  @@index([status])
+}
+
+model CheckIn {
+  id           String           @id @default(cuid())
+  ticket       Ticket?          @relation(fields: [ticketId], references: [id])
+  /// Nullable: a scan of a reference that does not exist is still audited.
+  ticketId     String?
+  /// The raw reference presented, even when no ticket matched it.
+  scannedRef   String
+  event        Event            @relation(fields: [eventId], references: [id])
+  eventId      String
+  attendeeName String
+  ticketType   TicketTypeCode?
+  gate         Gate             @relation(fields: [gateId], references: [id])
+  gateId       String
+  operator     User             @relation(fields: [operatorId], references: [id])
+  operatorId   String
+  deviceId     String
+  scannedAt    DateTime         @default(now())
+  result       CheckInResult
+  reason       RejectionReason?
+  durationMs   Int
+
+  @@index([eventId, scannedAt])
+  @@index([ticketId])
+  @@index([result, reason])
+}
+
+model SecurityEvent {
+  id                String            @id @default(cuid())
+  kind              SecurityEventKind
+  severity          SecuritySeverity
+  ticketRef         String
+  event             Event             @relation(fields: [eventId], references: [id])
+  eventId           String
+  gate              Gate              @relation(fields: [gateId], references: [id])
+  gateId            String
+  operator          User              @relation(fields: [operatorId], references: [id])
+  operatorId        String
+  deviceId          String
+  at                DateTime          @default(now())
+  result            CheckInResult
+  detail            String            @db.Text
+  firstScanAt       DateTime?
+  firstScanGate     String?
+  firstScanOperator String?
+
+  @@index([eventId, at])
+  @@index([severity])
+}
+
+model Notification {
+  id       String           @id @default(cuid())
+  kind     NotificationKind
+  priority String
+  title    String
+  body     String           @db.Text
+  href     String?
+  read     Boolean          @default(false)
+  at       DateTime         @default(now())
+
+  @@index([read, at])
+}

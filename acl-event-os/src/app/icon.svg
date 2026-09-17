@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="8" fill="#08090C"/>
+  <path d="M8 34h32l-2.6 4H10.6L8 34Z" fill="#E4B13E"/>
+  <path d="M8 31 6 17.5 15.5 24 24 12l8.5 12L42 17.5 40 31H8Z" fill="#E4B13E"/>
+  <text x="24" y="46" font-family="Arial Narrow, Arial, sans-serif" font-size="13" font-weight="900" fill="#E11021" text-anchor="middle">ACL</text>
+</svg>
