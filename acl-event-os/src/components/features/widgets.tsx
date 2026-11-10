@@ -29,7 +29,7 @@ function Kpi({ label, value, suffix, share, tone, foot }: { label: string; value
         {share !== undefined && <span className="font-display text-xl font-bold tabular-nums leading-none text-fg-muted">{Math.round(share * 100)}%</span>}
       </div>
       <div className="mt-3 flex items-baseline gap-1.5">
-        <span className="text-[32px] font-semibold leading-none tracking-tight tabular-nums">{value}</span>
+        <span className="text-[22px] font-semibold leading-none tracking-tight tabular-nums sm:text-[32px]">{value}</span>
         {suffix && <span className="text-base tabular-nums text-fg-dim">{suffix}</span>}
       </div>
       {share !== undefined && <Progress value={share} tone={tone} label={label} className="mt-3" />}
