@@ -93,3 +93,18 @@ The browser never mutates state. It holds a snapshot from `/api/state` (re-fetch
 ## Themes
 
 Dark (brand default) and light. Toggle with the sun/moon button in the header (or under **More** on mobile). The app opens in dark until someone picks light; the choice is saved per device. All colours are CSS variables in `src/app/globals.css`, so both themes share the same components. The arena hero, e-tickets, the gate camera and the venue map stay dark in both themes by design (`.theme-dark`).
+
+## Deploying a shared demo
+
+The app needs one long-running Node process (data lives in memory), so use a host that runs a normal web service — Render, Railway, Fly.io — not a serverless platform.
+
+**Render:** New → Blueprint → pick this repo and branch. `render.yaml` (repo root) sets everything up; Render asks you to enter `ACL_ACCESS_PASSWORD`.
+**Railway:** New Project → Deploy from GitHub repo → Settings: Root Directory `acl-event-os`, Build `npm install --include=dev && npm run build`, Start `npm start`, then add the variables below.
+
+| Variable | Purpose |
+| --- | --- |
+| `ACL_ACCESS_PASSWORD` | **Set this on any public deployment.** Visitors must enter it (any username). Without it, anyone with the link can act as Super Admin and reset the data |
+| `QR_SIGNING_SECRET` | Long random string that signs ticket QR codes |
+| `ACL_CLOCK` | `demo` (default) pins to fight night; `real` uses the real clock |
+
+Camera scanning works on these hosts because they serve HTTPS.
