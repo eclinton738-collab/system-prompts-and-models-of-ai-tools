@@ -14,7 +14,7 @@ interface Props { ticket: Ticket; type: TicketType; attendee: Attendee; event: E
 export function ETicket({ ticket, type, attendee, event, seatLabel, className }: Props) {
   const premium = type.tier !== "standard";
   return (
-    <div className={cn("relative mx-auto w-full max-w-[340px] overflow-hidden border bg-ink-950", premium ? "border-gold/60" : "border-ink-500", className)}>
+    <div className={cn("theme-dark relative mx-auto w-full max-w-[340px] overflow-hidden border bg-ink-950", premium ? "border-gold/60" : "border-ink-500", className)}>
       <div className="arena px-5 pb-4 pt-5">
         <div className="flex items-center justify-between">
           <Logo compact />
@@ -24,8 +24,8 @@ export function ETicket({ ticket, type, attendee, event, seatLabel, className }:
         <p className="mt-2 text-xs text-fg-muted">{date(event.doorsOpenAt)} · Doors {time(event.doorsOpenAt)} · {event.venue}, {event.location}</p>
       </div>
       <div className="relative border-t border-dashed border-ink-500 px-5 py-4">
-        <span className="absolute -left-2 -top-2 h-4 w-4 rounded-full bg-ink-850" aria-hidden />
-        <span className="absolute -right-2 -top-2 h-4 w-4 rounded-full bg-ink-850" aria-hidden />
+        <span className="absolute -left-2 -top-2 h-4 w-4 rounded-full border border-ink-500 bg-ink-800" aria-hidden />
+        <span className="absolute -right-2 -top-2 h-4 w-4 rounded-full border border-ink-500 bg-ink-800" aria-hidden />
         <div className="flex items-center gap-4">
           <div className="shrink-0 bg-white p-2">
             <QRCodeCanvas value={ticket.qrToken} size={116} level="M" marginSize={0} data-ticket-qr={ticket.id} aria-label={`QR code for ${ticket.id}`} />

@@ -47,7 +47,7 @@ export function BarsChart({ data, series, height = 260, extra }: { data: Row[]; 
         <CartesianGrid stroke={CHART.grid} vertical={false} />
         <XAxis dataKey="label" {...axis} interval="preserveStartEnd" minTickGap={24} />
         <YAxis {...axis} allowDecimals={false} tickFormatter={series.format} width={series.format ? 64 : 48} />
-        <Tooltip cursor={{ fill: "rgba(255,255,255,0.05)" }} content={<Tip series={[series]} extra={extra} />} />
+        <Tooltip cursor={{ fill: "rgb(var(--tint) / 0.06)" }} content={<Tip series={[series]} extra={extra} />} />
         <Bar dataKey={series.key} fill={series.color} radius={[3, 3, 0, 0]} maxBarSize={36} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>

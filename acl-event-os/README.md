@@ -89,3 +89,7 @@ The browser never mutates state. It holds a snapshot from `/api/state` (re-fetch
 
 - Brand imagery is drawn in CSS/SVG (arena lighting, cage mesh, ACL mark) so the repo ships no third-party photos. Drop real fight photography into the `.arena` backdrop in `src/app/globals.css` when available.
 - Chart colours are a validated colour-blind-safe palette (`src/lib/theme.ts`); green/amber/red are reserved for status.
+
+## Themes
+
+Dark (brand default) and light. Toggle with the sun/moon button in the header (or under **More** on mobile). The app opens in dark until someone picks light; the choice is saved per device. All colours are CSS variables in `src/app/globals.css`, so both themes share the same components. The arena hero, e-tickets, the gate camera and the venue map stay dark in both themes by design (`.theme-dark`).

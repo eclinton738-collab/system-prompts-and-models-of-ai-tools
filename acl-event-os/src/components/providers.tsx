@@ -4,6 +4,7 @@ import { RefreshCw, ServerCrash } from "lucide-react";
 import { Toaster } from "sonner";
 import { OpsProvider } from "./ops-provider";
 import { AppShell } from "./shell/app-shell";
+import { ThemeProvider, useTheme } from "./theme";
 import { LogoMark } from "./shell/logo";
 import { Button, ConfirmProvider, Skeleton } from "./ui";
 import { UiProvider } from "./ui-context";
@@ -17,9 +18,14 @@ function BootSkeleton() {
   );
 }
 
+function ThemedToaster() {
+  const { theme } = useTheme();
+  return <Toaster theme={theme} position="top-right" richColors closeButton toastOptions={{ style: { borderRadius: 2, fontFamily: "inherit" } }} />;
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <ThemeProvider>
       <OpsProvider fallback={<BootSkeleton />} errorView={(retry) => (
         <div className="flex h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
           <ServerCrash className="h-10 w-10 text-danger" />
@@ -29,7 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       )}>
         <ConfirmProvider><UiProvider><AppShell>{children}</AppShell></UiProvider></ConfirmProvider>
       </OpsProvider>
-      <Toaster theme="dark" position="top-right" richColors closeButton toastOptions={{ style: { borderRadius: 2, fontFamily: "inherit" } }} />
-    </>
+      <ThemedToaster />
+    </ThemeProvider>
   );
 }

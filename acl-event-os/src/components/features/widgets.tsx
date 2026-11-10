@@ -262,7 +262,7 @@ export function SecurityFeed({ className, limit = 7 }: { className?: string; lim
         <ol>
           {feed.map((c) => { const ok = c.result === "GRANTED"; const ref = c.ticketId ?? c.presented.slice(0, 24); return (
             <li key={c.id} className={cn("border-b border-ink-700 last:border-0", !ok && c.reason === "DUPLICATE" && "bg-danger/[0.07]")}>
-              <button type="button" disabled={!c.ticketId} onClick={() => c.ticketId && openTicket(c.ticketId)} className="grid w-full grid-cols-[64px_1fr_auto] items-center gap-3 px-4 py-2.5 text-left enabled:hover:bg-white/[0.03]">
+              <button type="button" disabled={!c.ticketId} onClick={() => c.ticketId && openTicket(c.ticketId)} className="grid w-full grid-cols-[64px_1fr_auto] items-center gap-3 px-4 py-2.5 text-left enabled:hover:bg-tint/[0.03]">
                 <time className="text-xs tabular-nums text-fg-dim">{time(c.at)}</time>
                 <span className="min-w-0"><span className={cn("block truncate text-sm font-medium", !ok && c.reason !== "WRONG_GATE" && "text-danger")}>{REASON_LABEL[c.reason]}</span><span className="ticket-id block truncate text-fg-muted">{ref} <span className="font-sans text-fg-dim">· {ix.gate.get(c.gateId)?.name}</span></span></span>
                 <ScanBadge result={c.result} reason={c.reason} />

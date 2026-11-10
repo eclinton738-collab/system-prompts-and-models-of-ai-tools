@@ -51,7 +51,7 @@ export function EventHero() {
           {c.parts ? (
             <div className="flex gap-1.5">
               {c.parts.map(([v, l]) => (
-                <div key={l} className="w-[68px] border border-white/10 bg-black/50 py-2 text-center backdrop-blur">
+                <div key={l} className="w-[68px] border border-tint/10 bg-black/50 py-2 text-center backdrop-blur">
                   <div className="font-display text-4xl font-bold tabular-nums leading-none">{v}</div>
                   <div className="mt-1 font-display text-[10px] font-semibold uppercase tracking-[0.2em] text-fg-dim">{l}</div>
                 </div>

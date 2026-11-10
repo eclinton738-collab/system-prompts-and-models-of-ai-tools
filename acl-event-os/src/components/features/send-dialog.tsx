@@ -43,7 +43,7 @@ export function SendDialog({ initialTicketId, onClose }: { initialTicketId?: str
         <ul className="max-h-64 divide-y divide-ink-700 overflow-y-auto border border-ink-600">
           {matches.length === 0 && <li className="p-4 text-center text-sm text-fg-dim">No paid ticket matches “{q}”.</li>}
           {matches.map((t) => { const a = ix.attendee.get(t.attendeeId)!; return (
-            <li key={t.id}><button type="button" aria-pressed={picked === t.id} onClick={() => setPicked(t.id)} className={cn("flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm transition", picked === t.id ? "bg-acl/15" : "hover:bg-white/5")}>
+            <li key={t.id}><button type="button" aria-pressed={picked === t.id} onClick={() => setPicked(t.id)} className={cn("flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm transition", picked === t.id ? "bg-acl/15" : "hover:bg-tint/5")}>
               <span className="min-w-0"><span className="ticket-id block">{t.id}</span><span className="block truncate text-xs text-fg-dim">{a.name} · {a.email}</span></span>
               <span className="shrink-0 text-xs text-fg-muted">{ix.type.get(t.typeId)!.name}</span>
             </button></li>

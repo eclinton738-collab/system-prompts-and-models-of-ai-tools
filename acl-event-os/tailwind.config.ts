@@ -1,18 +1,23 @@
 import type { Config } from "tailwindcss";
 
+const v = (name: string) => `rgb(var(--${name}) / <alpha-value>)`;
+
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      // Every colour is a CSS variable so the same classes serve both themes (see globals.css).
       colors: {
-        ink: { 950: "#07080A", 900: "#0C0D10", 850: "#101114", 800: "#15171B", 700: "#1C1F25", 600: "#262A32", 500: "#363B45" },
-        fg: { DEFAULT: "#F4F5F7", muted: "#A3A9B4", dim: "#6E7480" },
-        acl: { DEFAULT: "#E11D2E", 600: "#C3141F", 700: "#9B0F18", glow: "#FF3B4A" },
-        gold: { DEFAULT: "#D4AF37", light: "#EBCF74", dark: "#8C7120" },
-        ok: "#2EBD73",
-        info: "#4A90F0",
-        warn: "#F0A020",
-        danger: "#F04848",
+        ink: { 950: v("ink-950"), 900: v("ink-900"), 850: v("ink-850"), 800: v("ink-800"), 700: v("ink-700"), 600: v("ink-600"), 500: v("ink-500") },
+        fg: { DEFAULT: v("fg"), muted: v("fg-muted"), dim: v("fg-dim") },
+        acl: { DEFAULT: "#E11D2E", 600: "#C3141F", 700: "#9B0F18", glow: v("acl-glow") },
+        gold: { DEFAULT: v("gold"), light: v("gold-light"), dark: "#8C7120" },
+        ok: v("ok"),
+        info: v("info"),
+        warn: v("warn"),
+        danger: v("danger"),
+        /** Neutral overlay: white on dark surfaces, black on light ones. */
+        tint: v("tint"),
       },
       fontFamily: {
         display: ["Barlow Condensed", "Arial Narrow", "sans-serif"],
@@ -21,7 +26,7 @@ const config: Config = {
       },
       borderRadius: { DEFAULT: "2px", sm: "2px", md: "3px", lg: "4px" },
       boxShadow: {
-        panel: "0 1px 0 0 rgba(255,255,255,0.04) inset, 0 12px 32px -16px rgba(0,0,0,0.8)",
+        panel: "var(--shadow-panel)",
         glow: "0 0 0 1px rgba(225,29,46,0.5), 0 0 28px -4px rgba(225,29,46,0.45)",
       },
       keyframes: {

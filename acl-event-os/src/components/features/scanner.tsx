@@ -52,7 +52,7 @@ export function Verdict({ outcome, onNext, fullscreen }: { outcome: ScanOutcome;
   const color = { ok: "text-ok", warn: "text-warn", danger: "text-danger" }[tone];
   const frame = { ok: "border-ok bg-ok/[0.12]", warn: "border-warn bg-warn/[0.12]", danger: "border-danger bg-danger/[0.14]" }[tone];
   const Icon = granted ? CheckCircle2 : duplicate ? ShieldAlert : redirect ? TriangleAlert : XCircle;
-  const row = (k: string, v: React.ReactNode) => <div className="flex items-baseline justify-between gap-4 border-b border-white/10 py-2 last:border-0"><dt className="shrink-0 font-display text-xs font-semibold uppercase tracking-[0.16em] text-fg-muted">{k}</dt><dd className="min-w-0 truncate text-right text-base font-medium">{v}</dd></div>;
+  const row = (k: string, v: React.ReactNode) => <div className="flex items-baseline justify-between gap-4 border-b border-tint/10 py-2 last:border-0"><dt className="shrink-0 font-display text-xs font-semibold uppercase tracking-[0.16em] text-fg-muted">{k}</dt><dd className="min-w-0 truncate text-right text-base font-medium">{v}</dd></div>;
 
   return (
     <div role="alert" aria-live="assertive" data-verdict={c.result} data-reason={c.reason} className={cn("flex animate-verdict flex-col border-2 p-5", frame, fullscreen && "h-full justify-center border-0 p-6")}>
@@ -144,7 +144,7 @@ function CameraView({ onDecode, paused, fullscreen }: { onDecode: (text: string)
   const toggleFlash = async () => { await scanner.current?.toggleFlash().catch(() => {}); setFlash((f) => ({ ...f, on: scanner.current?.isFlashOn() ?? false })); };
 
   return (
-    <div className={cn("relative overflow-hidden bg-black", fullscreen ? "h-full w-full" : "aspect-[4/3] w-full border border-ink-500 sm:aspect-video")}>
+    <div className={cn("theme-dark relative overflow-hidden bg-black", fullscreen ? "h-full w-full" : "aspect-[4/3] w-full border border-ink-500 sm:aspect-video")}>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <video ref={video} className="h-full w-full object-cover" playsInline muted aria-label="Camera viewfinder" />
       {state === "live" && (
@@ -309,7 +309,7 @@ export function Scanner() {
 
       {/* Camera mode: the whole screen is the scanner. Built for a phone at the gate. */}
       {mode === "camera" && (
-        <div className="fixed inset-0 z-[70] flex flex-col bg-black" role="dialog" aria-label="Full-screen scanner">
+        <div className="theme-dark fixed inset-0 z-[70] flex flex-col bg-black" role="dialog" aria-label="Full-screen scanner">
           <div className="flex items-center justify-between gap-3 bg-ink-950 px-4 py-2.5 pt-[max(10px,env(safe-area-inset-top))]">
             <div className="min-w-0"><div className="h-display truncate text-lg">{gate?.name}</div><div className="truncate text-xs text-fg-dim">{s.currentUser.name} · {deviceId}</div></div>
             <div className="flex items-center gap-1.5">

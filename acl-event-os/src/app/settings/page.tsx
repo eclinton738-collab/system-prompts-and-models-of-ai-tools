@@ -129,7 +129,7 @@ export default function SettingsPage() {
                 <tr key={perm.id} className={cn(i > 0 && ALL_PERMISSIONS[i - 1].group !== perm.group && "[&>td]:border-t [&>td]:border-t-ink-500")}>
                   <td><span className="mr-2 inline-block w-20 font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-fg-dim">{perm.group}</span>{perm.label}</td>
                   {ROLES.map((r) => { const on = s.rolePermissions[r].includes(perm.id); const locked = r === "SUPER_ADMIN" || perm.id === "settings.manage"; return (
-                    <td key={r} className="text-center"><input type="checkbox" className="h-4 w-4 accent-[#2EBD73] disabled:opacity-40" aria-label={`${ROLE_LABELS[r]}: ${perm.label}`} checked={on} disabled={locked} onChange={() => togglePerm(r, perm.id, !on)} /></td>
+                    <td key={r} className="text-center"><input type="checkbox" className="h-4 w-4 accent-ok disabled:opacity-40" aria-label={`${ROLE_LABELS[r]}: ${perm.label}`} checked={on} disabled={locked} onChange={() => togglePerm(r, perm.id, !on)} /></td>
                   ); })}
                 </tr>
               ))}

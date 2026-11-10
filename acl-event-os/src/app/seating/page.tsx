@@ -82,7 +82,7 @@ export default function SeatingPage() {
 
       <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
         <Panel title="Arena Map" eyebrow={`${s.event.venue} · ${s.event.location}`} action={<span className="text-xs text-fg-dim">Shading shows how full a section is</span>}>
-          <svg viewBox="0 0 1000 680" className="h-auto w-full select-none" role="group" aria-label="Interactive seating map">
+          <svg viewBox="0 0 1000 680" className="theme-dark h-auto w-full select-none" role="group" aria-label="Interactive seating map">
             <rect x="8" y="8" width="984" height="664" fill="#0b0c0f" stroke="#262a32" strokeWidth="2" />
             {/* Stage / walkout */}
             <rect x="330" y="22" width="340" height="52" fill="#1c1f25" stroke="#363b45" />

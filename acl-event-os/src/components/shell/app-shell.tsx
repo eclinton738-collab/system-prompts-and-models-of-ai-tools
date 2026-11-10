@@ -15,6 +15,7 @@ import { can, NAV, navFor, ROLE_LABELS } from "@/lib/permissions";
 import { useOps } from "../ops-provider";
 import { Badge, Button, EmptyState, severityTone } from "../ui";
 import { useUi } from "../ui-context";
+import { ThemeToggle } from "../theme";
 import { Logo, LogoMark } from "./logo";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = { LayoutDashboard, Ticket, TrendingUp, ScanLine, Users, Armchair, CreditCard, Store, Megaphone, FileBarChart, Settings };
@@ -47,7 +48,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav aria-label="Primary" className="flex-1 space-y-0.5 overflow-y-auto px-2 py-2 xl:px-3">
           {nav.map((n) => { const Icon = ICONS[n.icon]; const active = isActive(path, n.href); return (
             <Link key={n.href} href={n.href} title={n.label} aria-current={active ? "page" : undefined}
-              className={cn("group relative flex h-10 items-center justify-center gap-3 rounded px-3 text-sm font-medium transition xl:justify-start", active ? "bg-acl/[0.14] text-fg" : "text-fg-muted hover:bg-white/5 hover:text-fg")}>
+              className={cn("group relative flex h-10 items-center justify-center gap-3 rounded px-3 text-sm font-medium transition xl:justify-start", active ? "bg-acl/[0.14] text-fg" : "text-fg-muted hover:bg-tint/5 hover:text-fg")}>
               {active && <span className="absolute inset-y-1.5 left-0 w-[3px] bg-acl" aria-hidden />}
               <Icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-acl-glow")} />
               <span className="hidden truncate xl:inline">{n.label}</span>
@@ -90,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="grid flex-1 grid-cols-2 content-start gap-2 overflow-y-auto p-4">
             {nav.map((n) => { const Icon = ICONS[n.icon]; return <Link key={n.href} href={n.href} className={cn("flex items-center gap-3 border p-4 text-sm font-medium", isActive(path, n.href) ? "border-acl bg-acl/10" : "border-ink-600 bg-ink-850")}><Icon className="h-5 w-5 text-fg-muted" />{n.label}</Link>; })}
           </div>
-          <div className="border-t border-ink-600 p-4"><ProfileMenu placement="sidebar" forceFull /></div>
+          <div className="space-y-3 border-t border-ink-600 p-4"><ThemeToggle withLabel /><ProfileMenu placement="sidebar" forceFull /></div>
         </div>
       )}
     </div>
@@ -117,8 +118,9 @@ function Header() {
       <div className="hidden flex-1 justify-center lg:flex"><GlobalSearch /></div>
       <div className="flex items-center gap-1">
         <div className="lg:hidden"><GlobalSearch compact /></div>
+        <ThemeToggle />
         <Notifications />
-        {allowed("settings.manage") && <Link href="/settings" aria-label="Event settings" title="Event settings" className="hidden h-9 w-9 items-center justify-center rounded text-fg-muted transition hover:bg-white/5 hover:text-fg sm:flex"><Settings className="h-[18px] w-[18px]" /></Link>}
+        {allowed("settings.manage") && <Link href="/settings" aria-label="Event settings" title="Event settings" className="hidden h-9 w-9 items-center justify-center rounded text-fg-muted transition hover:bg-tint/5 hover:text-fg sm:flex"><Settings className="h-[18px] w-[18px]" /></Link>}
         <div className="hidden md:block"><ProfileMenu placement="header" /></div>
       </div>
     </header>
@@ -175,7 +177,7 @@ function GlobalSearch({ compact }: { compact?: boolean }) {
           {results.length === 0 && <li className="p-4 text-center text-sm text-fg-dim">{allowed("attendees.view") ? `Nothing matches “${q.trim()}”.` : "Your role cannot search attendees."}</li>}
           {results.map((t, i) => { const a = ix.attendee.get(t.attendeeId)!; return (
             <li key={t.id} role="option" aria-selected={i === cursor}>
-              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(t.id)} onMouseEnter={() => setCursor(i)} className={cn("flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm", i === cursor && "bg-white/[0.06]")}>
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(t.id)} onMouseEnter={() => setCursor(i)} className={cn("flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm", i === cursor && "bg-tint/[0.06]")}>
                 <span className="min-w-0"><span className="ticket-id block">{t.id}</span><span className="block truncate text-xs text-fg-dim">{a.name} · {a.phone}</span></span>
                 <span className="shrink-0 text-xs text-fg-muted">{ix.type.get(t.typeId)!.name}</span>
               </button>
@@ -231,7 +233,7 @@ function Notifications() {
             {sorted.length === 0 && <li><EmptyState icon={Bell} title="All quiet" body="New sales, payments and security alerts appear here." /></li>}
             {sorted.map((n) => (
               <li key={n.id} className={cn("border-b border-ink-700", n.severity === "CRITICAL" && !n.read && "bg-danger/[0.09]")}>
-                <button type="button" className="flex w-full gap-3 px-4 py-3 text-left hover:bg-white/[0.04]" onClick={() => { if (!n.read) call("notifications.read", { id: n.id }); if (n.ticketId) { openTicket(n.ticketId); setOpen(false); } }}>
+                <button type="button" className="flex w-full gap-3 px-4 py-3 text-left hover:bg-tint/[0.04]" onClick={() => { if (!n.read) call("notifications.read", { id: n.id }); if (n.ticketId) { openTicket(n.ticketId); setOpen(false); } }}>
                   <span className={cn("mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center border", n.severity === "CRITICAL" ? "border-danger/60 bg-danger/15 text-danger" : n.severity === "WARNING" ? "border-warn/50 bg-warn/10 text-warn" : "border-ink-500 text-fg-muted")}>
                     {n.kind === "SECURITY" ? <ShieldAlert className="h-3.5 w-3.5" /> : n.kind === "SALE" ? <Ticket className="h-3.5 w-3.5" /> : n.kind === "PAYMENT" || n.kind === "REFUND" ? <CreditCard className="h-3.5 w-3.5" /> : <Bell className="h-3.5 w-3.5" />}
                   </span>
@@ -263,9 +265,9 @@ function ProfileMenu({ placement, forceFull }: { placement: "sidebar" | "header"
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         {placement === "header" ? (
-          <button type="button" aria-label={`Account: ${me.name}`} className="ml-1 flex items-center gap-2 rounded p-1 hover:bg-white/5">{avatar}</button>
+          <button type="button" aria-label={`Account: ${me.name}`} className="ml-1 flex items-center gap-2 rounded p-1 hover:bg-tint/5">{avatar}</button>
         ) : (
-          <button type="button" className="flex w-full items-center justify-center gap-3 rounded p-1.5 text-left hover:bg-white/5 xl:justify-start">
+          <button type="button" className="flex w-full items-center justify-center gap-3 rounded p-1.5 text-left hover:bg-tint/5 xl:justify-start">
             {avatar}
             <span className={cn("min-w-0 flex-1", forceFull ? "block" : "hidden xl:block")}><span className="block truncate text-sm font-semibold">{me.name}</span><span className="block truncate text-xs text-fg-dim">{me.title}</span></span>
             <ChevronsUpDown className={cn("h-4 w-4 shrink-0 text-fg-dim", forceFull ? "block" : "hidden xl:block")} />
@@ -279,7 +281,7 @@ function ProfileMenu({ placement, forceFull }: { placement: "sidebar" | "header"
             <p className="eyebrow px-2 pb-1 pt-1">{s.demo ? "Demo · view as role" : "Switch account"}</p>
             {logins.map((u) => (
               <button key={u.id} type="button" onClick={async () => { await switchUser(u.id); setOpen(false); toast.success(`Now acting as ${ROLE_LABELS[u.role]}`, { description: u.name }); router.refresh(); }}
-                className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm hover:bg-white/5", u.id === me.id && "bg-white/5")}>
+                className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-sm hover:bg-tint/5", u.id === me.id && "bg-tint/5")}>
                 <span className="min-w-0"><span className="block truncate">{ROLE_LABELS[u.role]}</span><span className="block truncate text-xs text-fg-dim">{u.name}</span></span>
                 {u.role === me.role && <Check className="h-4 w-4 shrink-0 text-ok" />}
               </button>

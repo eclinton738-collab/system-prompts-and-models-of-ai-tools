@@ -14,7 +14,7 @@ type Size = "sm" | "md" | "lg" | "icon";
 const VARIANT: Record<Variant, string> = {
   primary: "bg-acl text-white hover:bg-acl-600 active:bg-acl-700 shadow-[0_0_24px_-8px_rgba(225,29,46,0.9)]",
   secondary: "border border-ink-500 bg-ink-800 text-fg hover:border-fg-dim hover:bg-ink-700",
-  ghost: "text-fg-muted hover:bg-white/5 hover:text-fg",
+  ghost: "text-fg-muted hover:bg-tint/5 hover:text-fg",
   danger: "border border-danger/60 bg-danger/10 text-danger hover:bg-danger/20",
   gold: "bg-gradient-to-b from-gold-light to-gold text-ink-950 hover:brightness-110",
   success: "bg-ok text-ink-950 hover:brightness-110",
@@ -71,7 +71,7 @@ const TONE: Record<Tone, string> = {
   danger: "border-danger/50 bg-danger/10 text-danger",
   info: "border-info/40 bg-info/10 text-info",
   gold: "border-gold/50 bg-gold/10 text-gold-light",
-  neutral: "border-ink-500 bg-white/5 text-fg-muted",
+  neutral: "border-ink-500 bg-tint/5 text-fg-muted",
   acl: "border-acl bg-acl text-white",
 };
 export function Badge({ tone = "neutral", children, className, dot }: { tone?: Tone; children: React.ReactNode; className?: string; dot?: boolean }) {
@@ -118,7 +118,7 @@ export function Tabs<T extends string>({ value, onChange, options, label, classN
     <div role="tablist" aria-label={label} className={cn("inline-flex max-w-full overflow-x-auto border border-ink-600 bg-ink-900 p-0.5", className)}>
       {options.map((o) => (
         <button key={o.value} role="tab" type="button" aria-selected={value === o.value} onClick={() => onChange(o.value)}
-          className={cn("flex items-center gap-1.5 whitespace-nowrap rounded px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-[0.12em] transition", value === o.value ? "bg-acl text-white" : "text-fg-muted hover:bg-white/5 hover:text-fg")}>
+          className={cn("flex items-center gap-1.5 whitespace-nowrap rounded px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-[0.12em] transition", value === o.value ? "bg-acl text-white" : "text-fg-muted hover:bg-tint/5 hover:text-fg")}>
           {o.label}
           {o.count !== undefined && <span className={cn("tabular-nums", value === o.value ? "text-white/80" : "text-fg-dim")}>{o.count}</span>}
         </button>
@@ -232,13 +232,13 @@ export function EmptyState({ icon: Icon, title, body, action }: { icon: React.Co
   );
 }
 
-export const Skeleton = ({ className }: { className?: string }) => <div className={cn("animate-pulse bg-white/[0.06]", className)} />;
+export const Skeleton = ({ className }: { className?: string }) => <div className={cn("animate-pulse bg-tint/[0.06]", className)} />;
 
 export function Progress({ value, tone = "acl", label, className }: { value: number; tone?: "acl" | "ok" | "gold" | "info"; label: string; className?: string }) {
   const pctValue = Math.max(0, Math.min(100, value * 100));
   const bg = { acl: "bg-acl", ok: "bg-ok", gold: "bg-gold", info: "bg-info" }[tone];
   return (
-    <div role="progressbar" aria-label={label} aria-valuenow={Math.round(pctValue)} aria-valuemin={0} aria-valuemax={100} className={cn("h-1.5 w-full overflow-hidden bg-white/[0.07]", className)}>
+    <div role="progressbar" aria-label={label} aria-valuenow={Math.round(pctValue)} aria-valuemin={0} aria-valuemax={100} className={cn("h-1.5 w-full overflow-hidden bg-tint/[0.07]", className)}>
       <div className={cn("h-full transition-[width] duration-500", bg)} style={{ width: `${pctValue}%` }} />
     </div>
   );
