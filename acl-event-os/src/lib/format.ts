@@ -19,9 +19,10 @@ const isoDayF = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric"
 
 export const time = (iso: string) => timeF.format(new Date(iso));
 export const timeSec = (iso: string) => timeSecF.format(new Date(iso));
-export const date = (iso: string) => dateF.format(new Date(iso));
-export const shortDay = (iso: string) => dayF.format(new Date(iso));
-export const dateTime = (iso: string) => `${dayF.format(new Date(iso))}, ${timeF.format(new Date(iso))}`;
+const sep = (x: string) => x.replace("Sept", "Sep");
+export const date = (iso: string) => sep(dateF.format(new Date(iso)));
+export const shortDay = (iso: string) => sep(dayF.format(new Date(iso)));
+export const dateTime = (iso: string) => `${shortDay(iso)}, ${timeF.format(new Date(iso))}`;
 /** YYYY-MM-DD in venue time, for bucketing. */
 export const dayKey = (iso: string | number) => isoDayF.format(new Date(iso));
 

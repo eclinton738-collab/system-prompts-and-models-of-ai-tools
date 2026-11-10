@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { color-scheme: dark; }
+  html, body { height: 100%; }
+  body {
+    @apply bg-ink-950 text-fg font-sans antialiased;
+    font-feature-settings: "tnum" 1, "cv11" 1;
+    background-image:
+      radial-gradient(1200px 500px at 85% -10%, rgba(225, 29, 46, 0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(212, 175, 55, 0.045), transparent 60%);
+    background-attachment: fixed;
+  }
+  ::selection { background: rgba(225, 29, 46, 0.45); }
+  :focus-visible { outline: 2px solid #ff5a66; outline-offset: 2px; }
+  * { scrollbar-width: thin; scrollbar-color: #363b45 transparent; }
+  input, select, textarea { font: inherit; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+@layer components {
+  /* Metal surface: the base card of the system. Sharp corners, top highlight, hairline border. */
+  .panel {
+    @apply relative border border-ink-600 bg-ink-850 shadow-panel;
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 42%);
+  }
+  .panel-gold {
+    @apply border-gold/40;
+    background-image: linear-gradient(160deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0) 45%);
+  }
+  .eyebrow { @apply font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-fg-dim; }
+  .h-display { @apply font-display font-bold uppercase leading-none tracking-wide; }
+  .ticket-id { @apply font-mono text-[12.5px] tracking-tight text-fg; }
+
+  .tbl { @apply w-full border-collapse text-left text-[13px]; }
+  .tbl thead th { @apply sticky top-0 z-10 whitespace-nowrap border-b border-ink-600 bg-ink-800 px-3 py-2.5 font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-fg-dim; }
+  .tbl tbody td { @apply whitespace-nowrap border-b border-ink-700 px-3 py-2.5 align-middle; }
+  .tbl tbody tr { @apply transition-colors; }
+  .tbl tbody tr:hover { @apply bg-white/[0.025]; }
+  .tbl .num { @apply text-right tabular-nums; }
+
+  .input {
+    @apply h-10 w-full border border-ink-500 bg-ink-900 px-3 text-sm text-fg placeholder:text-fg-dim
+      transition-colors hover:border-fg-dim focus:border-acl-glow focus:outline-none focus:ring-1 focus:ring-acl-glow;
+  }
+  .input[aria-invalid="true"] { @apply border-danger; }
+  textarea.input { @apply h-auto py-2; }
+
+  /* Cinematic arena backdrop: overhead rig lights over a cage-mesh floor. Pure CSS. */
+  .arena {
+    background-color: #0a0a0c;
+    background-image:
+      radial-gradient(60% 120% at 82% 0%, rgba(225, 29, 46, 0.42), transparent 62%),
+      radial-gradient(40% 90% at 60% -20%, rgba(255, 255, 255, 0.10), transparent 60%),
+      radial-gradient(50% 100% at 100% 100%, rgba(212, 175, 55, 0.10), transparent 60%),
+      repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 13px),
+      repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 13px),
+      linear-gradient(180deg, #121317, #08090b);
+  }
+  .slash { clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }
+}
+
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+  .print-area { position: static !important; }
+  .print-area * { color: #000 !important; border-color: #bbb !important; background: transparent !important; box-shadow: none !important; }
+  .tbl thead th { position: static; }
+  main { padding: 0 !important; overflow: visible !important; }
+}
