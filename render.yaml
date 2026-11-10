@@ -1,0 +1,21 @@
+# Render Blueprint for ACL EVENT OS (app lives in ./acl-event-os).
+# The demo keeps data in server memory: it needs a long-running web service, and
+# it resets whenever the service restarts or (on the free plan) spins down when idle.
+services:
+  - type: web
+    name: acl-event-os
+    runtime: node
+    plan: free
+    rootDir: acl-event-os
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ACL_CLOCK
+        value: demo
+      - key: QR_SIGNING_SECRET
+        generateValue: true
+      - key: ACL_ACCESS_PASSWORD
+        sync: false # Render asks you to type this when you create the service
