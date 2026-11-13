@@ -1,0 +1,69 @@
+/*
+ * ACL DESIGN TOKENS
+ * -----------------
+ * The single source of truth for colour, type, spacing, radius and motion.
+ * When the ACL brand bible lands, change values HERE and nowhere else.
+ * Tailwind reads this file: `--color-ember` becomes `bg-ember`, `text-ember`...
+ */
+@theme {
+  /* Colour: dark-first, high contrast */
+  --color-ink: #0a0a0a;          /* page background */
+  --color-surface: #141414;      /* cards, header */
+  --color-surface-2: #1d1d1d;    /* raised / hover */
+  --color-line: #2c2c2c;         /* borders, dividers */
+  --color-bone: #f2efe9;         /* primary text */
+  --color-ash: #aaa59c;          /* secondary text (7.9:1 on ink) */
+  --color-ember: #d4281e;        /* the one accent: fills, large type, borders */
+  --color-ember-bright: #f2594d; /* small ember text on dark (5.8:1 on ink) */
+  --color-ember-deep: #a81d15;   /* pressed state */
+  --color-gold: #c9a24b;         /* champions and title bouts only */
+  --color-corner-red: #d4281e;   /* red corner */
+  --color-corner-blue: #2f6fd6;  /* blue corner */
+  --color-ok: #3fa56b;
+  --color-warn: #d9a019;
+
+  /* Radius: hard edges. This is a fight brand. */
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  /* Spacing scale base (Tailwind multiplies this: p-4 = 1rem) */
+  --spacing: 0.25rem;
+
+  /* Layout */
+  --container-page: 80rem;
+  --spacing-header: 3.5rem;      /* header height */
+  --spacing-bottomnav: 4rem;     /* mobile bottom nav height */
+  --spacing-gutter: 1rem;
+
+  /* Type scale: big, tight */
+  --text-display-xl: clamp(3.5rem, 13vw, 9rem);
+  --text-display-xl--line-height: 0.9;
+  --text-display-lg: clamp(2.75rem, 9vw, 5.5rem);
+  --text-display-lg--line-height: 0.92;
+  --text-display-md: clamp(2rem, 6vw, 3.25rem);
+  --text-display-md--line-height: 0.95;
+  --text-display-sm: 1.5rem;
+  --text-display-sm--line-height: 1;
+  --tracking-display: 0.01em;
+  --tracking-label: 0.14em;
+
+  /* Motion: subtle, cheap on low-end phones */
+  --ease-acl: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
+  --animate-page-in: page-in 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+/* Fonts are loaded in src/app/layout.tsx and exposed as CSS variables. */
+@theme inline {
+  --font-display: var(--font-acl-display), "Bebas Neue", "Arial Narrow", Impact, sans-serif;
+  --font-sans: var(--font-acl-body), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

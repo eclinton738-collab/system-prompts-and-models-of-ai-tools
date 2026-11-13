@@ -1,0 +1,129 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: var(--color-bone);
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--spacing-header) + 1rem);
+  }
+  body {
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-ember);
+    color: var(--color-bone);
+  }
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.72);
+  }
+}
+
+@layer components {
+  /* Headline style: heavy, condensed, uppercase */
+  .display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-display);
+    font-weight: 400;
+  }
+  /* Small uppercase label */
+  .label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-label);
+  }
+  .container-page {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: var(--spacing-gutter);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem; /* 44px touch target */
+    padding: 0.625rem 1.25rem;
+    font-weight: 800;
+    font-size: 0.9375rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-radius: var(--radius-sm);
+    border: 2px solid transparent;
+    transition: background-color var(--duration-fast) var(--ease-acl),
+      border-color var(--duration-fast) var(--ease-acl);
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--color-ember);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--color-ember-deep);
+  }
+  .btn-ghost {
+    border-color: var(--color-line);
+    color: var(--color-bone);
+  }
+  .btn-ghost:hover {
+    border-color: var(--color-bone);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .field {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    background: var(--color-ink);
+    color: var(--color-bone);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    font-size: 1rem; /* stops iOS zoom on focus */
+  }
+  .field:focus-visible {
+    border-color: var(--color-gold);
+  }
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+  }
+  /* The bamboo ring motif: poles lashed at the joints. */
+  .bamboo-rule {
+    height: 10px;
+    background:
+      repeating-linear-gradient(90deg, transparent 0 86px, var(--color-ink) 86px 90px),
+      linear-gradient(180deg, #d9bb6e 0%, var(--color-gold) 45%, #8c6d2a 100%);
+    border-radius: var(--radius-pill);
+    opacity: 0.85;
+  }
+}
+
+/* Data saver: no autoplay video, no decorative backgrounds. */
+html[data-saver="1"] .saver-hide {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
