@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "./api";
 
@@ -62,6 +62,22 @@ export function ApiForm({
   const [status, setStatus] = useState<"idle" | "busy" | "done">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+
+  // ISO timestamps from the server are shown in the editor's local time.
+  useEffect(() => {
+    setValues((s) => {
+      const next = { ...s };
+      for (const f of fields) {
+        const v = next[f.name];
+        if (f.type === "datetime-local" && typeof v === "string" && /Z$/.test(v)) {
+          const d = new Date(v);
+          next[f.name] = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        }
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const set = (name: string, v: unknown) => setValues((s) => ({ ...s, [name]: v }));
 

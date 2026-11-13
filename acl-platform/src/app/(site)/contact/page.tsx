@@ -8,7 +8,8 @@ export const metadata: Metadata = { title: "Contact", description: "Contact Afri
 const TOPICS = ["General", "Tickets & orders", "Press", "Partnerships", "Fighters & scouting", "Gym listing", "Careers"];
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
-  const topic = TOPICS.find((t) => t.toLowerCase().startsWith(((await searchParams).topic ?? "").toLowerCase() || "~")) ?? "";
+  const want = ((await searchParams).topic ?? "").toLowerCase();
+  const topic = (want && TOPICS.find((t) => t.toLowerCase().startsWith(want))) || "";
   const s = Object.fromEntries((await db.siteSetting.findMany({ where: { key: { in: ["contactEmail", "pressEmail", "partnershipsEmail"] } } })).map((x) => [x.key, x.value]));
   return (
     <>
