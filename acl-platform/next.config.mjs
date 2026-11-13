@@ -1,4 +1,3 @@
-import type { NextConfig } from "next";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -8,7 +7,7 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
 ];
 
-const config: NextConfig = {
+const config = {
   poweredByHeader: false,
   compress: true,
   images: { formats: ["image/avif", "image/webp"], remotePatterns: [] },
