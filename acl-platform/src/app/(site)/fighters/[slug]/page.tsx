@@ -90,7 +90,7 @@ export default async function FighterPage({ params, searchParams }: Props) {
       <header className="relative overflow-hidden border-b border-line bg-coal">
         <div aria-hidden className={`absolute inset-0 ${f.isChampion ? "bg-[radial-gradient(ellipse_at_80%_0%,rgba(214,171,59,0.3),transparent_60%)]" : "bg-[radial-gradient(ellipse_at_80%_0%,rgba(227,24,45,0.3),transparent_60%)]"}`} />
         <span aria-hidden className="display pointer-events-none absolute -bottom-8 left-0 whitespace-nowrap text-[28vw] leading-none text-white/[0.03]">{f.lastName}</span>
-        <div className="container-acl relative grid gap-6 pt-6 md:grid-cols-[1fr_minmax(0,24rem)] md:items-end lg:grid-cols-[1fr_28rem]">
+        <div className="container-acl relative grid gap-6 pt-6 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] md:items-end lg:grid-cols-[minmax(0,1fr)_28rem]">
           <div className="pb-6 md:pb-10">
             <Breadcrumbs items={[{ href: "/fighters", label: "Fighters" }, { href: `/fighters?division=${f.division.slug}`, label: f.division.name }, { label: name }]} />
             <div className="mb-3 flex flex-wrap gap-2">
@@ -133,7 +133,7 @@ export default async function FighterPage({ params, searchParams }: Props) {
 
       <div className="container-acl py-8 sm:py-10">
         {tab === "overview" && (
-          <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="space-y-10">
               {f.quote && (
                 <blockquote className="border-l-4 border-red pl-4 sm:pl-6">

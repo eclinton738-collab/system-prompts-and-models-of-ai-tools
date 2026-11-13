@@ -59,7 +59,7 @@ export default async function HomePage() {
         <section aria-labelledby="hero-title" className="relative overflow-hidden border-b border-line bg-ink">
           <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(227,24,45,0.28),transparent_60%)]" />
           <div aria-hidden className="slash-bg absolute inset-0" />
-          <div className="container-acl relative grid gap-6 py-6 sm:py-10 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:gap-10 lg:py-14">
+          <div className="container-acl relative grid gap-6 py-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_1.05fr] lg:items-center lg:gap-10 lg:py-14">
             <div className="animate-rise">
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 {live ? <LiveBadge label="Live now" /> : <span className="chip chip-red">Next event</span>}

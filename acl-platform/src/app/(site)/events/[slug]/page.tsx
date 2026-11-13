@@ -63,7 +63,7 @@ export default async function EventPage({ params }: Props) {
       <header className="relative overflow-hidden border-b border-line bg-coal">
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(227,24,45,0.3),transparent_55%)]" />
         <div aria-hidden className="slash-bg absolute inset-0" />
-        <div className="container-acl relative grid gap-6 py-6 sm:py-10 lg:grid-cols-[1fr_1fr] lg:items-center">
+        <div className="container-acl relative grid gap-6 py-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_1fr] lg:items-center">
           <div>
             <Breadcrumbs items={[{ href: "/events", label: "Events" }, ...(event.parentEvent ? [{ href: `/events/${event.parentEvent.slug}`, label: event.parentEvent.name }] : []), { label: event.name }]} />
             <div className="mb-3 flex flex-wrap gap-2">
@@ -89,7 +89,7 @@ export default async function EventPage({ params }: Props) {
         </div>
       </header>
 
-      <div className="container-acl grid gap-10 py-8 sm:py-12 lg:grid-cols-[1fr_22rem]">
+      <div className="container-acl grid gap-10 py-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-12">
           {live && <LiveBoard eventId={event.id} initial={live} />}
 

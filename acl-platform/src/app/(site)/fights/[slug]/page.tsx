@@ -93,8 +93,8 @@ export default async function FightPage({ params }: Props) {
         </div>
       </header>
 
-      <div className="container-acl grid gap-10 py-8 sm:py-12 lg:grid-cols-[1fr_24rem]">
-        <div className="space-y-12">
+      <div className="container-acl grid gap-10 py-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <div className="min-w-0 space-y-12">
           <section aria-label="Tale of the tape" className="card px-3 sm:px-8">
             <TaleOfTape a={withGym(a)} b={withGym(b)} at={event.startsAt} />
           </section>

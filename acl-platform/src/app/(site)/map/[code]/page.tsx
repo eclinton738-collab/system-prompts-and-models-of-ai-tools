@@ -33,7 +33,7 @@ export default async function CountryPage({ params }: Props) {
   return (
     <div className="container-acl py-6 sm:py-10">
       <Breadcrumbs items={[{ href: "/map", label: "Combat map" }, { label: country.name }]} />
-      <div className="grid gap-8 lg:grid-cols-[1fr_20rem] lg:items-start">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
         <div>
           <h1 className="text-5xl sm:text-8xl"><Flag code={country.code} /> {country.name}</h1>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

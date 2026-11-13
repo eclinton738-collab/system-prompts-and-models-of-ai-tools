@@ -52,7 +52,7 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
           </section>
         )}
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_20rem]">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <section aria-labelledby="latest">
             <h2 id="latest" className="mb-5 text-3xl sm:text-4xl">{q ? `Results for “${q}”` : sp.tag ? `Tagged: ${tags.find((t) => t.slug === sp.tag)?.name ?? sp.tag}` : "Latest"}</h2>
             {articles.length ? (

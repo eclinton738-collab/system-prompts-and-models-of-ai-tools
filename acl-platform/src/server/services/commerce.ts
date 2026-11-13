@@ -28,11 +28,18 @@ type Shipping = { shippingName: string; shippingAddress: string; shippingCity: s
 export async function createShopOrder(user: { id: string; email: string }, input: { items: { productId: string; size?: string | null; quantity: number }[]; promoCode?: string | null } & Shipping) {
   const products = await db.product.findMany({ where: { id: { in: input.items.map((i) => i.productId) }, active: true } });
   if (!input.items.length) throw new ApiError(422, "empty_cart", "Your cart is empty.");
-  const lines = input.items.map((item) => {
+  const merged = new Map<string, { productId: string; size?: string | null; quantity: number }>();
+  for (const i of input.items) {
+    const k = `${i.productId}:${i.size ?? ""}`;
+    merged.set(k, { ...i, quantity: (merged.get(k)?.quantity ?? 0) + i.quantity });
+  }
+  const perProduct = new Map<string, number>();
+  for (const i of merged.values()) perProduct.set(i.productId, (perProduct.get(i.productId) ?? 0) + i.quantity);
+  const lines = [...merged.values()].map((item) => {
     const product = products.find((p) => p.id === item.productId);
     if (!product) throw new ApiError(422, "unavailable", "An item in your cart is no longer available.");
     if (product.sizes.length && !product.sizes.includes(item.size ?? "")) throw new ApiError(422, "size", `Choose a size for ${product.name}.`);
-    if (product.inventory < item.quantity) throw new ApiError(409, "out_of_stock", `Only ${product.inventory} left of ${product.name}.`);
+    if (product.inventory < perProduct.get(product.id)!) throw new ApiError(409, "out_of_stock", `Only ${product.inventory} left of ${product.name}.`);
     return { product, size: item.size ?? null, quantity: item.quantity };
   });
   const currency = lines[0].product.currency;
@@ -72,11 +79,15 @@ export async function createTicketOrder(user: { id: string; email: string; name:
   const event = await db.event.findUnique({ where: { id: input.eventId } });
   if (!event || event.status === "CANCELLED" || event.status === "COMPLETED") throw new ApiError(409, "closed", "Ticket sales are closed for this event.");
   const types = await db.ticketType.findMany({ where: { eventId: event.id, id: { in: input.items.map((i) => i.ticketTypeId) } }, include: { _count: { select: { tickets: true } } } });
-  const lines = input.items.filter((i) => i.quantity > 0).map((item) => {
-    const type = types.find((t) => t.id === item.ticketTypeId);
+  // Merge duplicate lines first so capacity is checked against the true quantity per category.
+  const wanted = new Map<string, number>();
+  for (const i of input.items) if (i.quantity > 0) wanted.set(i.ticketTypeId, (wanted.get(i.ticketTypeId) ?? 0) + i.quantity);
+  const lines = [...wanted].map(([ticketTypeId, quantity]) => {
+    const type = types.find((t) => t.id === ticketTypeId);
     if (!type || !type.salesOpen) throw new ApiError(422, "unavailable", "A selected ticket category is not on sale.");
-    if (type._count.tickets + item.quantity > type.capacity) throw new ApiError(409, "sold_out", `Not enough ${type.name} tickets remaining.`);
-    return { type, quantity: item.quantity };
+    if (quantity > 8) throw new ApiError(422, "limit", `Maximum 8 ${type.name} tickets per order.`);
+    if (type._count.tickets + quantity > type.capacity) throw new ApiError(409, "sold_out", `Not enough ${type.name} tickets remaining.`);
+    return { type, quantity };
   });
   if (!lines.length) throw new ApiError(422, "empty", "Select at least one ticket.");
   const currency = lines[0].type.currency;
@@ -92,6 +103,8 @@ export async function createTicketOrder(user: { id: string; email: string; name:
 
   const order = await db.$transaction(async (tx) => {
     for (const l of lines) {
+      // Row lock serialises concurrent buyers of the same category so the last seats cannot be sold twice.
+      await tx.$queryRaw`SELECT id FROM "TicketType" WHERE id = ${l.type.id} FOR UPDATE`;
       const sold = await tx.ticket.count({ where: { ticketTypeId: l.type.id } });
       if (sold + l.quantity > l.type.capacity) throw new ApiError(409, "sold_out", `${l.type.name} just sold out.`);
     }

@@ -49,15 +49,15 @@ export default async function RankingsPage({ searchParams }: { searchParams: Pro
         </div>
 
         {data.champion ? (
-          <Link href={`/fighters/${data.champion.slug}`} className="group relative mb-4 flex items-center gap-4 overflow-hidden border border-gold/60 bg-gradient-to-r from-gold/20 via-coal to-coal p-3 sm:p-5">
-            <div className="h-24 w-20 shrink-0 overflow-hidden sm:h-36 sm:w-28"><FighterPortrait fighter={data.champion} champion /></div>
+          <div className="relative mb-4 flex items-center gap-4 overflow-hidden border border-gold/60 bg-gradient-to-r from-gold/20 via-coal to-coal p-3 sm:p-5">
+            <Link href={`/fighters/${data.champion.slug}`} aria-hidden tabIndex={-1} className="h-24 w-20 shrink-0 overflow-hidden sm:h-36 sm:w-28"><FighterPortrait fighter={data.champion} champion /></Link>
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-gold"><BeltIcon className="h-4 w-8" /> Champion</p>
-              <p className="display truncate text-3xl group-hover:text-gold sm:text-6xl">{fighterName(data.champion)}</p>
+              <Link href={`/fighters/${data.champion.slug}`} className="display block truncate text-3xl hover:text-gold sm:text-6xl">{fighterName(data.champion)}</Link>
               <p className="mt-1 text-sm text-bone/80"><Flag code={data.champion.countryCode} /> {data.champion.country.name} · {data.champion.record.wins}–{data.champion.record.losses}–{data.champion.record.draws} · since {fmtDateShort(data.champion.wonAt)}</p>
               <p className="mt-1 text-sm">Next: {next(data.champion)}</p>
             </div>
-          </Link>
+          </div>
         ) : (
           <div className="card mb-4 p-5"><p className="display text-2xl text-gold">Title vacant</p><p className="text-sm text-fog">The top contenders will fight for the belt.</p></div>
         )}
