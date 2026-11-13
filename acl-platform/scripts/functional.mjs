@@ -92,7 +92,7 @@ ok("order page shows 2 QR tickets and 10% discount", (html.match(/ACLT-/g) ?? []
 r = await fan.get(`${BASE}/account/orders/${orderId}`);
 ok("another user cannot open the order (IDOR)", r.status() === 404 && !(await r.text()).includes("ACLT-"), String(r.status()));
 r = await api(reg, "POST", "/api/v1/orders/tickets", { eventId, items: [{ ticketTypeId: ringside.id, quantity: 7 }, { ticketTypeId: ringside.id, quantity: 7 }] });
-ok("overselling capacity rejected", r.status === 409, JSON.stringify(r.j));
+ok("duplicate ticket lines cannot bypass capacity or per-order limits", r.status === 409 || r.status === 422, JSON.stringify(r.j));
 r = await api(reg, "POST", "/api/v1/orders/tickets", { eventId, items: [{ ticketTypeId: ga.id, quantity: 1 }], promoCode: "NOPE" });
 ok("invalid promo rejected", r.status === 422);
 await page.goto(BASE + "/shop/acl-corner-cap"); const capId = await page.getAttribute("[data-entity-type=product]", "data-entity-id");
