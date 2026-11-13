@@ -1,0 +1,1128 @@
+// Africa Combat League — relational data model.
+// Conventions: money is stored in minor units + ISO currency code; countries are
+// referenced by ISO-3166 alpha-2 code; fighter records/champions/country rankings
+// are derived from fights and title reigns rather than duplicated.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────── Enums ─────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  EVENT_MANAGER
+  EDITOR
+  SCOUT
+  JOURNALIST
+  MEDIA_PARTNER
+  SPONSOR
+  COACH
+  FIGHTER
+  FAN
+}
+
+enum Gender {
+  MEN
+  WOMEN
+}
+
+enum Stance {
+  ORTHODOX
+  SOUTHPAW
+  SWITCH
+}
+
+enum FighterStatus {
+  ACTIVE
+  INACTIVE
+  RETIRED
+}
+
+enum EventStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum EventType {
+  FIGHT_NIGHT
+  WEIGH_IN
+  PRESS_CONFERENCE
+  OPEN_WORKOUT
+  FAN_EVENT
+}
+
+enum FightStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum CardPosition {
+  MAIN_EVENT
+  CO_MAIN
+  UNDERCARD
+}
+
+enum ResultMethod {
+  KO
+  TKO
+  UD
+  SD
+  MD
+  DRAW
+  RTD
+  DQ
+  NC
+}
+
+enum ArticleCategory {
+  BREAKING_NEWS
+  FIGHT_ANNOUNCEMENTS
+  FIGHTER_NEWS
+  RANKINGS
+  INTERVIEWS
+  TRAINING_CAMP
+  EVENT_NEWS
+  BUSINESS
+  AFRICAN_COMBAT_SPORTS
+  BEHIND_THE_SCENES
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum VideoCategory {
+  LIVE
+  FULL_FIGHTS
+  HIGHLIGHTS
+  INTERVIEWS
+  PRESS_CONFERENCES
+  FACE_OFFS
+  WEIGH_INS
+  TRAINING_CAMP
+  DOCUMENTARY
+  BEHIND_THE_SCENES
+  SHORT_CLIPS
+}
+
+enum RivalryType {
+  FIGHTER
+  REGION
+}
+
+enum OrderKind {
+  SHOP
+  TICKETS
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  FULFILLED
+}
+
+enum ProductCategory {
+  SHIRTS
+  HOODIES
+  CAPS
+  FIGHTER
+  EVENT
+  CHAMPIONSHIP
+  GYM
+  LIMITED
+}
+
+enum ApplicationStatus {
+  APPLICATION
+  REVIEW
+  SCOUTING
+  TEST
+  CONTRACT
+  ACL_FIGHTER
+  DECLINED
+}
+
+enum NotificationType {
+  FIGHT_ANNOUNCEMENT
+  FIGHTER_FIGHT
+  EVENT_REMINDER
+  RESULT
+  RANKING
+  BREAKING_NEWS
+  TICKET_RELEASE
+  MERCH_DROP
+  NEW_VIDEO
+  SYSTEM
+}
+
+enum PointReason {
+  SIGNUP
+  WATCH_VIDEO
+  ATTEND_EVENT
+  PREDICT_FIGHT
+  CORRECT_PREDICTION
+  SHARE_CONTENT
+  READ_ARTICLE
+  FOLLOW_FIGHTER
+  BUY_MERCH
+  BUY_TICKET
+  CAMPAIGN
+  COMMUNITY_POST
+}
+
+enum ModerationStatus {
+  VISIBLE
+  FLAGGED
+  HIDDEN
+}
+
+enum ThreadCategory {
+  DISCUSSION
+  FIGHTER_QA
+  EVENT
+  FAN_CLUB
+}
+
+enum SponsorTier {
+  TITLE
+  PREMIER
+  OFFICIAL
+  SUPPORTING
+}
+
+enum InquiryStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+enum MediaAssetKind {
+  PRESS_RELEASE
+  LOGO
+  MEDIA_KIT
+  FIGHT_CARD
+  STATISTICS
+  FIGHTER_BIOS
+}
+
+// ───────────── Reference data ─────────────
+
+model Country {
+  code       String  @id // ISO 3166-1 alpha-2
+  numeric    String  @unique // ISO 3166-1 numeric, used to join map geometry
+  name       String
+  aclMarket  Boolean @default(false) // priority ACL market
+  fighters   Fighter[]
+  gyms       Gym[]
+  events     Event[]
+  users      User[]
+}
+
+model Currency {
+  code   String @id
+  name   String
+  symbol String
+  perUsd Float // admin-maintained display rate
+}
+
+model SiteSetting {
+  key   String @id
+  value String
+}
+
+// ───────────── Identity ─────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  handle       String   @unique
+  role         Role     @default(FAN)
+  countryCode  String?
+  country      Country? @relation(fields: [countryCode], references: [code])
+  city         String?
+  bio          String?
+  premium      Boolean  @default(false)
+  disabled     Boolean  @default(false)
+  fighterId    String?  @unique // links a FIGHTER-role account to its athlete profile
+  fighter      Fighter? @relation("FighterAccount", fields: [fighterId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions       Session[]
+  follows        Follow[]
+  eventFavorites EventFavorite[]
+  watchlist      WatchlistItem[]
+  videoViews     VideoView[]
+  predictions    Prediction[]
+  points         PointEntry[]
+  badges         UserBadge[]
+  notifications  Notification[]
+  preferences    NotificationPreference?
+  orders         Order[]
+  tickets        Ticket[]
+  applications   Application[]
+  articles       Article[]
+  threads        Thread[]
+  posts          Post[]
+  pollVotes      PollVote[]
+  rivalryVotes   RivalryVote[]
+  auditLogs      AuditLog[]
+  reports        Report[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique // sha-256 of the cookie token; raw token never stored
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ───────────── Sport ─────────────
+
+model Division {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  gender      Gender   @default(MEN)
+  limitLbs    Float?
+  limitKg     Float?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  fighters    Fighter[]
+  fights      Fight[]
+  rankings    Ranking[]
+  titleReigns TitleReign[]
+}
+
+model Gym {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  countryCode   String
+  country       Country  @relation(fields: [countryCode], references: [code])
+  state         String?
+  city          String
+  address       String?
+  disciplines   String[] // Boxing, MMA, Wrestling, Kickboxing, Fitness
+  description   String
+  programs      String[]
+  phone         String?
+  email         String?
+  website       String?
+  photoUrl      String?
+  foundedYear   Int?
+  aclAffiliated Boolean  @default(false)
+  fighters      Fighter[]
+  coaches       Coach[]
+  photos        Photo[]
+}
+
+model Coach {
+  id       String    @id @default(cuid())
+  name     String
+  bio      String?
+  gymId    String?
+  gym      Gym?      @relation(fields: [gymId], references: [id], onDelete: SetNull)
+  fighters Fighter[]
+}
+
+model Fighter {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  firstName   String
+  lastName    String
+  nickname    String?
+  gender      Gender        @default(MEN)
+  dateOfBirth DateTime
+  countryCode String
+  country     Country       @relation(fields: [countryCode], references: [code])
+  state       String?
+  city        String?
+  heightCm    Int
+  reachCm     Int
+  stance      Stance
+  style       String // e.g. "Pressure fighter" — drives filters + recommendations
+  divisionId  String
+  division    Division      @relation(fields: [divisionId], references: [id])
+  gymId       String?
+  gym         Gym?          @relation(fields: [gymId], references: [id], onDelete: SetNull)
+  coachId     String?
+  coach       Coach?        @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  status      FighterStatus @default(ACTIVE)
+  bio         String
+  story       String?
+  quote       String?
+  photoUrl    String?
+  featured    Boolean       @default(false)
+  proDebut    DateTime?
+  // Record before joining ACL. ACL bouts are derived from the Fight table.
+  priorWins   Int           @default(0)
+  priorLosses Int           @default(0)
+  priorDraws  Int           @default(0)
+  priorKos    Int           @default(0)
+  instagram   String?
+  xHandle     String?
+  tiktok      String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  fightsAsA    Fight[]          @relation("FighterA")
+  fightsAsB    Fight[]          @relation("FighterB")
+  wins         Fight[]          @relation("Winner")
+  ranking      Ranking?
+  titleReigns  TitleReign[]
+  roundStats   FightRoundStat[]
+  followers    Follow[]
+  articles     Article[]
+  videos       Video[]
+  photos       Photo[]
+  products     Product[]
+  rivalriesAsA Rivalry[]        @relation("RivalA")
+  rivalriesAsB Rivalry[]        @relation("RivalB")
+  predictions  Prediction[]
+  threads      Thread[]
+  account      User?            @relation("FighterAccount")
+
+  @@index([countryCode])
+  @@index([divisionId])
+}
+
+model Event {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  name          String
+  number        String? // e.g. "001"
+  tagline       String?
+  type          EventType   @default(FIGHT_NIGHT)
+  parentEventId String? // weigh-ins, pressers etc. hang off a fight night
+  parentEvent   Event?      @relation("EventProgramme", fields: [parentEventId], references: [id], onDelete: SetNull)
+  programme     Event[]     @relation("EventProgramme")
+  startsAt      DateTime
+  venue         String
+  venueInfo     String?
+  city          String
+  state         String?
+  countryCode   String
+  country       Country     @relation(fields: [countryCode], references: [code])
+  description   String
+  status        EventStatus @default(SCHEDULED)
+  posterUrl     String?
+  ticketUrl     String? // optional external ticketing override
+  broadcast     String?
+  sideA         String? // regional billing, e.g. "ABIA"
+  sideB         String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  fights      Fight[]
+  ticketTypes TicketType[]
+  sponsors    Sponsor[]
+  articles    Article[]
+  videos      Video[]
+  photos      Photo[]
+  products    Product[]
+  rivalries   Rivalry[]
+  favorites   EventFavorite[]
+  threads     Thread[]
+  mediaAssets MediaAsset[]
+
+  @@index([startsAt])
+}
+
+model Fight {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  eventId          String
+  event            Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  fighterAId       String
+  fighterA         Fighter       @relation("FighterA", fields: [fighterAId], references: [id])
+  fighterBId       String
+  fighterB         Fighter       @relation("FighterB", fields: [fighterBId], references: [id])
+  divisionId       String
+  division         Division      @relation(fields: [divisionId], references: [id])
+  fightType        String        @default("Professional boxing")
+  rounds           Int           @default(10)
+  roundMinutes     Int           @default(3)
+  position         CardPosition  @default(UNDERCARD)
+  order            Int           @default(0) // bout order on the card, highest fights last
+  isTitleFight     Boolean       @default(false)
+  status           FightStatus   @default(SCHEDULED)
+  // Result
+  winnerId         String?
+  winner           Fighter?      @relation("Winner", fields: [winnerId], references: [id])
+  method           ResultMethod?
+  endRound         Int?
+  endTime          String? // "2:14"
+  performanceBonus Boolean       @default(false)
+  // Live state (written by the live console / a future scoring provider)
+  currentRound     Int?
+  clockSeconds     Int? // seconds remaining in the round when the clock was last set
+  clockRunning     Boolean       @default(false)
+  clockUpdatedAt   DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  roundStats  FightRoundStat[]
+  scorecards  Scorecard[]
+  commentary  Commentary[]
+  videos      Video[]
+  predictions Prediction[]
+  titleReigns TitleReign[]
+  rivalries   Rivalry[]
+
+  @@index([eventId])
+  @@index([fighterAId])
+  @@index([fighterBId])
+}
+
+// Round-by-round punch statistics. Empty until supplied by officials or a data provider.
+model FightRoundStat {
+  id            String  @id @default(cuid())
+  fightId       String
+  fight         Fight   @relation(fields: [fightId], references: [id], onDelete: Cascade)
+  fighterId     String
+  fighter       Fighter @relation(fields: [fighterId], references: [id])
+  round         Int
+  jabsThrown    Int     @default(0)
+  jabsLanded    Int     @default(0)
+  powerThrown   Int     @default(0)
+  powerLanded   Int     @default(0)
+  bodyLanded    Int     @default(0)
+  headLanded    Int     @default(0)
+  knockdowns    Int     @default(0)
+  source        String  @default("manual") // manual | provider id
+
+  @@unique([fightId, fighterId, round])
+}
+
+model Scorecard {
+  id      String @id @default(cuid())
+  fightId String
+  fight   Fight  @relation(fields: [fightId], references: [id], onDelete: Cascade)
+  judge   String
+  scoreA  Int
+  scoreB  Int
+}
+
+model Commentary {
+  id        String   @id @default(cuid())
+  fightId   String
+  fight     Fight    @relation(fields: [fightId], references: [id], onDelete: Cascade)
+  round     Int?
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([fightId, createdAt])
+}
+
+model Ranking {
+  id           String   @id @default(cuid())
+  divisionId   String
+  division     Division @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  fighterId    String   @unique
+  fighter      Fighter  @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+  rank         Int // 1 = #1 contender. The champion is the open TitleReign.
+  previousRank Int?
+  updatedAt    DateTime @updatedAt
+
+  @@unique([divisionId, rank])
+}
+
+model TitleReign {
+  id         String    @id @default(cuid())
+  divisionId String
+  division   Division  @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  fighterId  String
+  fighter    Fighter   @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+  wonAt      DateTime
+  lostAt     DateTime? // null = current champion
+  wonFightId String?
+  wonFight   Fight?    @relation(fields: [wonFightId], references: [id], onDelete: SetNull)
+  note       String?
+
+  @@index([divisionId, lostAt])
+}
+
+// ───────────── Content ─────────────
+
+model Article {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  title       String
+  excerpt     String
+  body        String
+  category    ArticleCategory
+  status      PublishStatus   @default(PUBLISHED)
+  featured    Boolean         @default(false)
+  coverUrl    String?
+  authorId    String
+  author      User            @relation(fields: [authorId], references: [id])
+  eventId     String?
+  event       Event?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  publishedAt DateTime        @default(now())
+  views       Int             @default(0)
+  tags        Tag[]
+  fighters    Fighter[]
+
+  @@index([publishedAt])
+  @@index([category])
+}
+
+model Tag {
+  id       String    @id @default(cuid())
+  slug     String    @unique
+  name     String
+  articles Article[]
+}
+
+model Series {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  description String
+  kind        String  @default("ACL Original") // ACL Original | Fighter documentary | Rivalry documentary | ...
+  sortOrder   Int     @default(0)
+  videos      Video[]
+}
+
+model Video {
+  id           String        @id @default(cuid())
+  slug         String        @unique
+  title        String
+  description  String
+  category     VideoCategory
+  durationSec  Int
+  thumbnailUrl String?
+  sourceUrl    String? // HLS/MP4 on the video CDN. Null = asset not attached yet.
+  premium      Boolean       @default(false)
+  status       PublishStatus @default(PUBLISHED)
+  publishedAt  DateTime      @default(now())
+  views        Int           @default(0)
+  eventId      String?
+  event        Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  fightId      String?
+  fight        Fight?        @relation(fields: [fightId], references: [id], onDelete: SetNull)
+  seriesId     String?
+  series       Series?       @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+  episode      Int?
+  fighters     Fighter[]
+  watchlist    WatchlistItem[]
+  viewsBy      VideoView[]
+  moments      RivalryMoment[]
+
+  @@index([category, publishedAt])
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  url       String
+  caption   String
+  credit    String?
+  eventId   String?
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  fighterId String?
+  fighter   Fighter? @relation(fields: [fighterId], references: [id], onDelete: SetNull)
+  gymId     String?
+  gym       Gym?     @relation(fields: [gymId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+}
+
+model MediaAsset {
+  id          String         @id @default(cuid())
+  title       String
+  kind        MediaAssetKind
+  description String
+  body        String? // press release text
+  fileUrl     String? // object-storage URL for downloadable assets
+  eventId     String?
+  event       Event?         @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  publishedAt DateTime       @default(now())
+}
+
+model Rivalry {
+  id         String      @id @default(cuid())
+  slug       String      @unique
+  type       RivalryType @default(FIGHTER)
+  title      String
+  tagline    String
+  origin     String
+  sideA      String // display name of side A (fighter name or region)
+  sideB      String
+  fighterAId String?
+  fighterA   Fighter?    @relation("RivalA", fields: [fighterAId], references: [id], onDelete: SetNull)
+  fighterBId String?
+  fighterB   Fighter?    @relation("RivalB", fields: [fighterBId], references: [id], onDelete: SetNull)
+  eventId    String?
+  event      Event?      @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  fightId    String?
+  fight      Fight?      @relation(fields: [fightId], references: [id], onDelete: SetNull)
+  featured   Boolean     @default(false)
+  moments    RivalryMoment[]
+  votes      RivalryVote[]
+}
+
+model RivalryMoment {
+  id        String   @id @default(cuid())
+  rivalryId String
+  rivalry   Rivalry  @relation(fields: [rivalryId], references: [id], onDelete: Cascade)
+  date      DateTime
+  kind      String // Confrontation | Callout | Contract | Face-off | Announcement | Fight night | Quote | Social
+  title     String
+  body      String
+  quoteBy   String?
+  videoId   String?
+  video     Video?   @relation(fields: [videoId], references: [id], onDelete: SetNull)
+
+  @@index([rivalryId, date])
+}
+
+model RivalryVote {
+  rivalryId String
+  rivalry   Rivalry @relation(fields: [rivalryId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  side      String // "A" | "B"
+
+  @@id([rivalryId, userId])
+}
+
+// ───────────── Commerce ─────────────
+
+model TicketType {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name        String
+  section     String
+  description String?
+  priceMinor  Int
+  currency    String
+  capacity    Int
+  salesOpen   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  tickets     Ticket[]
+  orderItems  OrderItem[]
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  name        String
+  description String
+  category    ProductCategory
+  priceMinor  Int
+  currency    String          @default("USD")
+  imageUrl    String?
+  sizes       String[]
+  inventory   Int             @default(0)
+  limited     Boolean         @default(false)
+  active      Boolean         @default(true)
+  fighterId   String?
+  fighter     Fighter?        @relation(fields: [fighterId], references: [id], onDelete: SetNull)
+  eventId     String?
+  event       Event?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  orderItems  OrderItem[]
+  createdAt   DateTime        @default(now())
+}
+
+model PromoCode {
+  code       String    @id
+  percentOff Int
+  active     Boolean   @default(true)
+  expiresAt  DateTime?
+  maxUses    Int?
+  uses       Int       @default(0)
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  number          String      @unique
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  kind            OrderKind
+  status          OrderStatus @default(PENDING)
+  currency        String
+  subtotalMinor   Int
+  discountMinor   Int         @default(0)
+  totalMinor      Int
+  promoCode       String?
+  paymentProvider String
+  paymentRef      String?
+  shippingName    String?
+  shippingAddress String?
+  shippingCity    String?
+  shippingCountry String?
+  phone           String?
+  createdAt       DateTime    @default(now())
+  items           OrderItem[]
+  tickets         Ticket[]
+
+  @@index([userId, createdAt])
+}
+
+model OrderItem {
+  id           String      @id @default(cuid())
+  orderId      String
+  order        Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  ticketTypeId String?
+  ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id], onDelete: SetNull)
+  description  String
+  size         String?
+  quantity     Int
+  unitMinor    Int
+}
+
+model Ticket {
+  id           String     @id @default(cuid())
+  code         String     @unique // encoded in the QR
+  orderId      String
+  order        Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ticketTypeId String
+  ticketType   TicketType @relation(fields: [ticketTypeId], references: [id])
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  holderName   String
+  checkedInAt  DateTime? // set at the gate; drives "events attended"
+  createdAt    DateTime   @default(now())
+}
+
+model Sponsor {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  tier        SponsorTier @default(OFFICIAL)
+  description String?
+  website     String?
+  logoUrl     String?
+  active      Boolean     @default(true)
+  events      Event[]
+}
+
+model SponsorInquiry {
+  id        String        @id @default(cuid())
+  company   String
+  name      String
+  email     String
+  phone     String?
+  country   String?
+  budget    String?
+  interests String[]
+  message   String
+  status    InquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  topic     String
+  message   String
+  status    InquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+// ───────────── Scouting ─────────────
+
+model Application {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status            ApplicationStatus @default(APPLICATION)
+  fullName          String
+  dateOfBirth       DateTime
+  countryCode       String
+  city              String
+  weightKg          Float
+  heightCm          Int
+  reachCm           Int?
+  stance            Stance
+  wins              Int               @default(0)
+  losses            Int               @default(0)
+  draws             Int               @default(0)
+  gymName           String?
+  coachName         String?
+  experience        String
+  videoLinks        String[]
+  photoLinks        String[]
+  phone             String
+  email             String
+  documentsReceived Boolean           @default(false)
+  medicalCleared    Boolean           @default(false)
+  contractStatus    String            @default("Not issued")
+  scoutNotes        String? // internal only
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  messages          ApplicationMessage[]
+
+  @@index([status])
+}
+
+model ApplicationMessage {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStaff     Boolean     @default(true)
+  body          String
+  createdAt     DateTime    @default(now())
+}
+
+// ───────────── Fan engagement ─────────────
+
+model Follow {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fighterId String
+  fighter   Fighter  @relation(fields: [fighterId], references: [id], onDelete: Cascade)
+  notify    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@id([userId, fighterId])
+  @@index([fighterId])
+}
+
+model EventFavorite {
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([userId, eventId])
+}
+
+model WatchlistItem {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, videoId])
+}
+
+model VideoView {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, videoId])
+}
+
+// Fan engagement only — no stakes, no payouts.
+model Prediction {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fightId       String
+  fight         Fight    @relation(fields: [fightId], references: [id], onDelete: Cascade)
+  pickFighterId String
+  pickFighter   Fighter  @relation(fields: [pickFighterId], references: [id])
+  method        String? // "KO/TKO" | "Decision"
+  round         Int?
+  correct       Boolean? // null until settled
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, fightId])
+  @@index([fightId])
+}
+
+model PointEntry {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason    PointReason
+  refKey    String // idempotency key, e.g. video id
+  points    Int
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, reason, refKey])
+  @@index([userId])
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String
+  users       UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedAt DateTime @default(now())
+
+  @@id([userId, badgeId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  url       String?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model NotificationPreference {
+  userId             String  @id
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fightAnnouncements Boolean @default(true)
+  fighterFights      Boolean @default(true)
+  eventReminders     Boolean @default(true)
+  results            Boolean @default(true)
+  rankings           Boolean @default(true)
+  breakingNews       Boolean @default(true)
+  ticketReleases     Boolean @default(true)
+  merchDrops         Boolean @default(false)
+  newVideos          Boolean @default(true)
+  emailChannel       Boolean @default(false)
+}
+
+// ───────────── Community ─────────────
+
+model Thread {
+  id        String           @id @default(cuid())
+  title     String
+  body      String
+  category  ThreadCategory   @default(DISCUSSION)
+  authorId  String
+  author    User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  eventId   String?
+  event     Event?           @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  fighterId String?
+  fighter   Fighter?         @relation(fields: [fighterId], references: [id], onDelete: SetNull)
+  pinned    Boolean          @default(false)
+  locked    Boolean          @default(false)
+  status    ModerationStatus @default(VISIBLE)
+  createdAt DateTime         @default(now())
+  posts     Post[]
+  reports   Report[]
+
+  @@index([createdAt])
+}
+
+model Post {
+  id        String           @id @default(cuid())
+  threadId  String
+  thread    Thread           @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  status    ModerationStatus @default(VISIBLE)
+  createdAt DateTime         @default(now())
+  reports   Report[]
+
+  @@index([threadId, createdAt])
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threadId  String?
+  thread    Thread?  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reason    String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Poll {
+  id        String       @id @default(cuid())
+  question  String
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  options   PollOption[]
+  votes     PollVote[]
+}
+
+model PollOption {
+  id     String     @id @default(cuid())
+  pollId String
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  label  String
+  votes  PollVote[]
+}
+
+model PollVote {
+  pollId   String
+  poll     Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  optionId String
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, userId])
+}
+
+// ───────────── Operations ─────────────
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  type       String // page_view | video_view | signup | ticket_purchase | merch_purchase | share | follow | prediction
+  path       String?
+  entityType String? // fighter | event | video | article | ...
+  entityId   String?
+  userId     String?
+  visitorId  String? // anonymous, random per-browser id
+  country    String?
+  source     String? // referrer host or "direct"
+  valueMinor Int? // revenue in USD minor units, watch seconds for video
+  createdAt  DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([entityType, entityId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String // create | update | delete | login | ...
+  resource   String
+  resourceId String?
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
